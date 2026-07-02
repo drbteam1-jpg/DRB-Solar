@@ -10,85 +10,85 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
 <style>
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif; background:#0f1117; color:#e0e0e0; min-height:100vh; }
+  body { font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif; background:#111827; color:#e2e8f0; min-height:100vh; }
 
   /* ── Header ── */
-  .header { background:linear-gradient(135deg,#1a1f35 0%,#0d1b2a 100%); padding:20px 32px; border-bottom:1px solid #2a3a5c; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+  .header { background:linear-gradient(135deg,#1e293b 0%,#111827 100%); padding:20px 32px; border-bottom:1px solid #334155; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; }
   .header-left { display:flex; align-items:center; gap:16px; }
   .header-icon { font-size:2.2rem; }
-  .header-left h1 { font-size:1.4rem; font-weight:700; color:#fff; }
-  .header-left p  { font-size:0.8rem; color:#7a9cc9; margin-top:3px; }
-  .header-right { font-size:0.78rem; color:#5a7a9a; }
+  .header-left h1 { font-size:1.4rem; font-weight:700; color:#f1f5f9; }
+  .header-left p  { font-size:0.8rem; color:#94a3b8; margin-top:3px; }
+  .header-right { font-size:0.78rem; color:#64748b; }
 
   /* ── Filter bar ── */
-  .filter-bar { background:#141824; padding:12px 32px; border-bottom:1px solid #1e2a40; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
-  .filter-divider { width:1px; height:28px; background:#253550; flex-shrink:0; }
-  .filter-label { font-size:0.72rem; color:#7a9cc9; font-weight:600; letter-spacing:.5px; text-transform:uppercase; white-space:nowrap; }
+  .filter-bar { background:#1e293b; padding:12px 32px; border-bottom:1px solid #334155; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+  .filter-divider { width:1px; height:28px; background:#334155; flex-shrink:0; }
+  .filter-label { font-size:0.72rem; color:#94a3b8; font-weight:600; letter-spacing:.5px; text-transform:uppercase; white-space:nowrap; }
 
   /* Date inputs */
   .date-group { display:flex; align-items:center; gap:7px; }
-  .date-input { background:#1e2a3e; border:1px solid #2e4060; border-radius:6px; color:#e0e0e0; padding:7px 11px; font-size:0.82rem; width:126px; cursor:pointer; outline:none; }
-  .date-input:focus { border-color:#3d7bd8; }
-  .date-sep { color:#5a7a9a; }
+  .date-input { background:#293548; border:1px solid #475569; border-radius:6px; color:#e2e8f0; padding:7px 11px; font-size:0.82rem; width:126px; cursor:pointer; outline:none; }
+  .date-input:focus { border-color:#38bdf8; }
+  .date-sep { color:#64748b; }
   .btn { padding:7px 15px; border-radius:6px; border:none; cursor:pointer; font-size:0.8rem; font-weight:600; transition:all .15s; font-family:inherit; }
-  .btn-primary   { background:#2563eb; color:#fff; }
-  .btn-primary:hover { background:#1d4ed8; }
-  .btn-secondary { background:#1e2a3e; border:1px solid #2e4060; color:#9cb3d0; }
-  .btn-secondary:hover { background:#243450; }
+  .btn-primary   { background:#0ea5e9; color:#fff; }
+  .btn-primary:hover { background:#0284c7; }
+  .btn-secondary { background:#293548; border:1px solid #475569; color:#94a3b8; }
+  .btn-secondary:hover { background:#344562; }
 
   /* Quick date buttons */
   .quick-btns { display:flex; gap:5px; }
-  .quick-btn { padding:6px 11px; border-radius:20px; border:1px solid #2e4060; background:#1e2a3e; color:#9cb3d0; font-size:0.73rem; cursor:pointer; transition:all .15s; white-space:nowrap; font-family:inherit; }
-  .quick-btn:hover { background:#243450; color:#e0e0e0; }
-  .quick-btn.active { background:#2563eb; border-color:#2563eb; color:#fff; }
+  .quick-btn { padding:6px 11px; border-radius:20px; border:1px solid #475569; background:#293548; color:#94a3b8; font-size:0.73rem; cursor:pointer; transition:all .15s; white-space:nowrap; font-family:inherit; }
+  .quick-btn:hover { background:#344562; color:#e2e8f0; }
+  .quick-btn.active { background:#0ea5e9; border-color:#0ea5e9; color:#fff; }
 
   /* ── Granularity segment control ── */
-  .gran-seg { display:flex; background:#111a28; border:1px solid #2e4060; border-radius:8px; overflow:hidden; }
-  .gran-btn { padding:7px 20px; border:none; background:transparent; color:#7a9cc9; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all .15s; font-family:inherit; white-space:nowrap; position:relative; }
-  .gran-btn + .gran-btn { border-left:1px solid #2e4060; }
-  .gran-btn:hover { color:#e0e0e0; background:#1a2a42; }
-  .gran-btn.active { background:#2563eb; color:#fff; border-color:#2563eb; box-shadow:inset 0 1px 4px rgba(0,0,0,.3); }
-  .gran-btn.active + .gran-btn { border-left-color:#2563eb; }
+  .gran-seg { display:flex; background:#1a2535; border:1px solid #475569; border-radius:8px; overflow:hidden; }
+  .gran-btn { padding:7px 20px; border:none; background:transparent; color:#94a3b8; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all .15s; font-family:inherit; white-space:nowrap; position:relative; }
+  .gran-btn + .gran-btn { border-left:1px solid #475569; }
+  .gran-btn:hover { color:#e2e8f0; background:#283548; }
+  .gran-btn.active { background:#0ea5e9; color:#fff; border-color:#0ea5e9; box-shadow:inset 0 1px 4px rgba(0,0,0,.25); }
+  .gran-btn.active + .gran-btn { border-left-color:#0ea5e9; }
 
   /* ── KPI row ── */
   .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; padding:20px 32px 0; }
-  .kpi-card { background:#141824; border:1px solid #1e2a40; border-radius:10px; padding:16px 18px; position:relative; overflow:hidden; }
+  .kpi-card { background:#1e293b; border:1px solid #334155; border-radius:10px; padding:16px 18px; position:relative; overflow:hidden; }
   .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; border-radius:10px 10px 0 0; }
   .kpi-green::before  { background:linear-gradient(90deg,#10b981,#34d399); }
-  .kpi-blue::before   { background:linear-gradient(90deg,#3b82f6,#60a5fa); }
+  .kpi-blue::before   { background:linear-gradient(90deg,#2dd4bf,#5eead4); }
   .kpi-orange::before { background:linear-gradient(90deg,#f59e0b,#fbbf24); }
   .kpi-purple::before { background:linear-gradient(90deg,#8b5cf6,#a78bfa); }
-  .kpi-label { font-size:0.72rem; color:#7a9cc9; font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
-  .kpi-value { font-size:1.6rem; font-weight:700; color:#fff; line-height:1; }
-  .kpi-unit  { font-size:0.78rem; color:#7a9cc9; margin-left:3px; font-weight:400; }
-  .kpi-sub   { font-size:0.72rem; color:#5a7a9a; margin-top:5px; }
+  .kpi-label { font-size:0.82rem; color:#94a3b8; font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
+  .kpi-value { font-size:1.9rem; font-weight:700; color:#f1f5f9; line-height:1; }
+  .kpi-unit  { font-size:0.88rem; color:#94a3b8; margin-left:4px; font-weight:400; }
+  .kpi-sub   { font-size:0.8rem; color:#64748b; margin-top:6px; }
 
   /* ── Charts grid ── */
   .charts-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:16px 32px 32px; }
-  .chart-card { background:#141824; border:1px solid #1e2a40; border-radius:10px; overflow:hidden; }
-  .chart-header { padding:14px 18px 10px; border-bottom:1px solid #1a2235; }
-  .chart-header h3 { font-size:0.88rem; font-weight:700; color:#e0e0e0; }
-  .chart-header p  { font-size:0.72rem; color:#5a7a9a; margin-top:3px; }
+  .chart-card { background:#1e293b; border:1px solid #334155; border-radius:10px; overflow:hidden; }
+  .chart-header { padding:14px 18px 10px; border-bottom:1px solid #2d3f52; }
+  .chart-header h3 { font-size:1rem; font-weight:700; color:#e2e8f0; }
+  .chart-header p  { font-size:0.8rem; color:#64748b; margin-top:4px; }
   .chart-body { height:300px; padding:4px; }
-  .no-data { display:flex; align-items:center; justify-content:center; height:100%; color:#5a7a9a; font-size:.85rem; }
+  .no-data { display:flex; align-items:center; justify-content:center; height:100%; color:#64748b; font-size:.85rem; }
 
   /* ── Responsive ── */
   @media (max-width:1000px) { .charts-grid { grid-template-columns:1fr; } .kpi-row { grid-template-columns:repeat(2,1fr); } }
   @media (max-width:600px)  { .kpi-row { grid-template-columns:1fr; } .filter-bar { flex-direction:column; align-items:flex-start; } .header { flex-direction:column; } }
 
-  /* ── Flatpickr dark theme ── */
-  .flatpickr-calendar { background:#1e2a3e !important; border:1px solid #2e4060 !important; box-shadow:0 8px 32px rgba(0,0,0,.6) !important; }
-  .flatpickr-day { color:#c0d0e0 !important; border-radius:4px !important; }
-  .flatpickr-day:hover { background:#243450 !important; }
-  .flatpickr-day.selected,.flatpickr-day.startRange,.flatpickr-day.endRange { background:#2563eb !important; border-color:#2563eb !important; color:#fff !important; }
-  .flatpickr-day.inRange { background:#1a3a6e !important; border-color:transparent !important; box-shadow:none !important; }
-  .flatpickr-month,.flatpickr-weekdays { background:#1e2a3e !important; }
-  .flatpickr-weekday { color:#7a9cc9 !important; }
-  .flatpickr-current-month { color:#c0d0e0 !important; }
-  .flatpickr-months .flatpickr-prev-month,.flatpickr-months .flatpickr-next-month { color:#c0d0e0 !important; fill:#c0d0e0 !important; }
-  .numInputWrapper input { color:#c0d0e0 !important; }
-  .flatpickr-monthDropdown-months { color:#c0d0e0 !important; background:#1e2a3e !important; }
-  span.arrowUp:after,span.arrowDown:after { border-bottom-color:#7a9cc9 !important; border-top-color:#7a9cc9 !important; }
+  /* ── Flatpickr ── */
+  .flatpickr-calendar { background:#293548 !important; border:1px solid #475569 !important; box-shadow:0 8px 32px rgba(0,0,0,.5) !important; }
+  .flatpickr-day { color:#cbd5e1 !important; border-radius:4px !important; }
+  .flatpickr-day:hover { background:#344562 !important; }
+  .flatpickr-day.selected,.flatpickr-day.startRange,.flatpickr-day.endRange { background:#0ea5e9 !important; border-color:#0ea5e9 !important; color:#fff !important; }
+  .flatpickr-day.inRange { background:#1a4060 !important; border-color:transparent !important; box-shadow:none !important; }
+  .flatpickr-month,.flatpickr-weekdays { background:#293548 !important; }
+  .flatpickr-weekday { color:#94a3b8 !important; }
+  .flatpickr-current-month { color:#cbd5e1 !important; }
+  .flatpickr-months .flatpickr-prev-month,.flatpickr-months .flatpickr-next-month { color:#cbd5e1 !important; fill:#cbd5e1 !important; }
+  .numInputWrapper input { color:#cbd5e1 !important; }
+  .flatpickr-monthDropdown-months { color:#cbd5e1 !important; background:#293548 !important; }
+  span.arrowUp:after,span.arrowDown:after { border-bottom-color:#94a3b8 !important; border-top-color:#94a3b8 !important; }
 </style>
 </head>
 <body>
@@ -200,11 +200,11 @@ const CFG = {responsive:true, displayModeBar:false};
 const LAY = (extra) => Object.assign({
   paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
   margin:{t:10,r:12,b:44,l:62},
-  font:{family:'Malgun Gothic,Apple SD Gothic Neo,sans-serif',color:'#9cb3d0',size:10},
-  xaxis:{gridcolor:'#1a2640',zerolinecolor:'#1a2640',tickfont:{size:9}},
-  yaxis:{gridcolor:'#1a2640',zerolinecolor:'#1a2640',tickfont:{size:9}},
-  legend:{bgcolor:'rgba(0,0,0,0)',font:{size:9},orientation:'h',y:-0.18},
-  hoverlabel:{bgcolor:'#1e2a3e',bordercolor:'#2e4060',font:{color:'#e0e0e0',size:10}}
+  font:{family:'Malgun Gothic,Apple SD Gothic Neo,sans-serif',color:'#94a3b8',size:12},
+  xaxis:{gridcolor:'#2d3f52',zerolinecolor:'#2d3f52',tickfont:{size:11}},
+  yaxis:{gridcolor:'#2d3f52',zerolinecolor:'#2d3f52',tickfont:{size:11}},
+  legend:{bgcolor:'rgba(0,0,0,0)',font:{size:11},orientation:'h',y:-0.18},
+  hoverlabel:{bgcolor:'#293548',bordercolor:'#475569',font:{color:'#e2e8f0',size:13}}
 }, extra);
 
 // ── State ───────────────────────────────────────────────────────
@@ -299,11 +299,18 @@ function drawChart1(gen, g) {
   const unit = kwhUnit(granularity);
   const maxY = Math.max(...ys);
 
-  const traces = [{
+  const barTrace1 = {
     x:xs, y:ys, type:'bar', name:g.label+' 발전량',
-    marker:{ color:'#3b82f6' },
+    marker:{ color:'#2dd4bf' },
     hovertemplate:'<b>%{x}</b><br>발전량: %{y:,.1f} '+unit+'<extra></extra>'
-  }];
+  };
+  if (granularity === 'monthly') {
+    barTrace1.text         = ys.map(v => fmt(v,1));
+    barTrace1.textposition = 'outside';
+    barTrace1.textfont     = {color:'#cbd5e1', size:12};
+    barTrace1.cliponaxis   = false;
+  }
+  const traces = [barTrace1];
 
   // Daily only: overlay monthly average line
   if (granularity === 'daily') {
@@ -319,7 +326,7 @@ function drawChart1(gen, g) {
   }
 
   Plotly.newPlot('chart1', traces, LAY({
-    yaxis:{title:{text:unit,font:{size:9}},gridcolor:'#1a2640',zerolinecolor:'#1a2640'},
+    yaxis:{title:{text:unit,font:{size:11}},gridcolor:'#2d3f52',zerolinecolor:'#2d3f52'},
     bargap:g.bargap
   }), CFG);
 }
@@ -346,8 +353,8 @@ function drawChart2(gen, g) {
     });
     traces = [
       { x:xs, y:hrs, type:'scatter', mode:'lines', name:'일별 발전시간',
-        fill:'tozeroy', fillcolor:'rgba(59,130,246,0.1)',
-        line:{color:'#3b82f6',width:1},
+        fill:'tozeroy', fillcolor:'rgba(45,212,191,0.1)',
+        line:{color:'#2dd4bf',width:1},
         hovertemplate:'<b>%{x}</b><br>발전시간: %{y:.2f} h<extra></extra>' },
       { x:xs, y:ma,  type:'scatter', mode:'lines', name:'30일 이동평균',
         line:{color:'#10b981',width:2},
@@ -356,16 +363,22 @@ function drawChart2(gen, g) {
     ];
   } else {
     // Weekly/Monthly: colour-coded bar (green ≥ 3.5h, blue < 3.5h)
-    traces = [
-      { x:xs, y:hrs, type:'bar', name:g.label+' 평균 발전시간',
-        marker:{color:'#3b82f6'},
-        hovertemplate:'<b>%{x}</b><br>발전시간: %{y:.2f} h<extra></extra>' },
-      targetLine
-    ];
+    const barTrace2 = {
+      x:xs, y:hrs, type:'bar', name:g.label+' 평균 발전시간',
+      marker:{color:'#2dd4bf'},
+      hovertemplate:'<b>%{x}</b><br>발전시간: %{y:.2f} h<extra></extra>'
+    };
+    if (granularity === 'monthly') {
+      barTrace2.text         = hrs.map(v => v.toFixed(2)+'h');
+      barTrace2.textposition = 'outside';
+      barTrace2.textfont     = {color:'#cbd5e1', size:12};
+      barTrace2.cliponaxis   = false;
+    }
+    traces = [barTrace2, targetLine];
   }
 
   Plotly.newPlot('chart2', traces, LAY({
-    yaxis:{title:{text:'시간 (h)',font:{size:9}},gridcolor:'#1a2640',zerolinecolor:'#1a2640'},
+    yaxis:{title:{text:'시간 (h)',font:{size:11}},gridcolor:'#2d3f52',zerolinecolor:'#2d3f52'},
     bargap:g.bargap
   }), CFG);
 }
@@ -378,16 +391,28 @@ function drawChart3(usage, g) {
   const usagY  = usage.map(d => +toUnit(d.total_usage, granularity).toFixed(2));
   const solarY = usage.map(d => +toUnit(d.total_solar, granularity).toFixed(2));
 
-  Plotly.newPlot('chart3', [
-    { x:xs, y:usagY,  type:'bar', name:'전력사용량',
-      marker:{color:'#334155', opacity:0.85},
-      hovertemplate:'<b>%{x}</b><br>전력사용량: %{y:,.1f} '+unit+'<extra></extra>' },
-    { x:xs, y:solarY, type:'bar', name:'태양광 발전량',
-      marker:{color:'#f59e0b'},
-      hovertemplate:'<b>%{x}</b><br>태양광 발전량: %{y:,.1f} '+unit+'<extra></extra>' }
-  ], LAY({
+  const trUsage = {
+    x:xs, y:usagY, type:'bar', name:'전력사용량',
+    marker:{color:'#475569', opacity:0.9},
+    hovertemplate:'<b>%{x}</b><br>전력사용량: %{y:,.1f} '+unit+'<extra></extra>'
+  };
+  const trSolar = {
+    x:xs, y:solarY, type:'bar', name:'태양광 발전량',
+    marker:{color:'#f59e0b'},
+    hovertemplate:'<b>%{x}</b><br>태양광 발전량: %{y:,.1f} '+unit+'<extra></extra>'
+  };
+  if (granularity === 'monthly') {
+    trUsage.text         = usagY.map(v => fmt(v,1));
+    trUsage.textposition = 'outside';
+    trUsage.textfont     = {color:'#94a3b8', size:11};
+    trUsage.cliponaxis   = false;
+    trSolar.text         = solarY.map(v => fmt(v,1));
+    trSolar.textposition = 'inside';
+    trSolar.textfont     = {color:'#fff', size:11};
+  }
+  Plotly.newPlot('chart3', [trUsage, trSolar], LAY({
     barmode:'overlay',
-    yaxis:{title:{text:unit,font:{size:9}},gridcolor:'#1a2640',zerolinecolor:'#1a2640'},
+    yaxis:{title:{text:unit,font:{size:11}},gridcolor:'#2d3f52',zerolinecolor:'#2d3f52'},
     bargap:g.bargap
   }), CFG);
 }
@@ -414,7 +439,7 @@ function drawChart4(usage, g) {
       line:{color:'#10b981',width:1.5,dash:'dash'},
       hoverinfo:'skip' }
   ], LAY({
-    yaxis:{title:{text:'비율 (%)',font:{size:9}},gridcolor:'#1a2640',zerolinecolor:'#1a2640',
+    yaxis:{title:{text:'비율 (%)',font:{size:11}},gridcolor:'#2d3f52',zerolinecolor:'#2d3f52',
            range:[0,Math.max(...ratios)*1.2]}
   }), CFG);
 }
