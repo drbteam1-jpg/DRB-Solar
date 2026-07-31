@@ -168,7 +168,7 @@ const LAY = (extra) => Object.assign({
   paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
   margin:{t:10,r:12,b:44,l:62},
   font:{family:'Malgun Gothic,Apple SD Gothic Neo,sans-serif',color:'#94a3b8',size:12},
-  xaxis:{gridcolor:'#2d3f52',zerolinecolor:'#2d3f52',tickfont:{size:11}},
+  xaxis:{gridcolor:'#2d3f52',zerolinecolor:'#2d3f52',tickfont:{size:11},type:granularity==='daily'?'date':'category',tickangle:granularity==='daily'?undefined:-45,nticks:granularity==='daily'?undefined:16,automargin:true},
   yaxis:{gridcolor:'#2d3f52',zerolinecolor:'#2d3f52',tickfont:{size:11}},
   legend:{bgcolor:'rgba(0,0,0,0)',font:{size:11},orientation:'h',y:-0.18},
   hoverlabel:{bgcolor:'#293548',bordercolor:'#475569',font:{color:'#e2e8f0',size:13}}
@@ -179,6 +179,7 @@ const GRAN = {
   weekly:  { label:'주간', xKey:'week_start', genArr:'weekly_gen',  usageArr:'weekly_usage', kwhField:'total_kwh', hoursField:'avg_hours', bargap:0.2  },
   monthly: { label:'월간', xKey:'month',      genArr:'monthly_gen', usageArr:'monthly_usage',kwhField:'total_kwh', hoursField:'avg_hours', bargap:0.35 }
 };
+function xLabel(d,g){if(granularity!=='weekly')return d[g.xKey];return d.week_start.slice(2,4)+'/'+d.week_start.slice(5,7)+'월_'+d.week.slice(6)+'주';}
 const kwhUnit=(g)=>g==='daily'?'kWh':'MWh';
 const toUnit=(v,g)=>g==='daily'?v:v/1000;
 const fmt=(n,d=0)=>n==null?'-':n.toLocaleString('ko-KR',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -211,7 +212,7 @@ function updateHeaders(label,gran){
 }
 function drawChart1(gen,g){
   if(!gen.length){document.getElementById('chart1').innerHTML='<div class="no-data">데이터 없음</div>';return;}
-  const xs=gen.map(d=>d[g.xKey]),ys=gen.map(d=>+toUnit(d[g.kwhField],granularity).toFixed(2)),unit=kwhUnit(granularity);
+  const xs=gen.map(d=>xLabel(d,g)),ys=gen.map(d=>+toUnit(d[g.kwhField],granularity).toFixed(2)),unit=kwhUnit(granularity);
   const bar={x:xs,y:ys,type:'bar',name:g.label+' 발전량',marker:{color:'#2dd4bf'},hovertemplate:'<b>%{x}</b><br>발전량: %{y:,.1f} '+unit+'<extra></extra>'};
   if(granularity==='monthly'){bar.text=ys.map(v=>fmt(v,1));bar.textposition='outside';bar.textfont={color:'#cbd5e1',size:12};bar.cliponaxis=false;}
   const traces=[bar];
@@ -223,7 +224,7 @@ function drawChart1(gen,g){
 }
 function drawChart2(gen,g){
   if(!gen.length){document.getElementById('chart2').innerHTML='<div class="no-data">데이터 없음</div>';return;}
-  const xs=gen.map(d=>d[g.xKey]),hrs=gen.map(d=>d[g.hoursField]);
+  const xs=gen.map(d=>xLabel(d,g)),hrs=gen.map(d=>d[g.hoursField]);
   const target={x:[xs[0],xs[xs.length-1]],y:[3.5,3.5],type:'scatter',mode:'lines',name:'목표 3.5h',line:{color:'#f59e0b',width:1.5,dash:'dash'},hoverinfo:'skip'};
   let traces;
   if(granularity==='daily'){
@@ -238,7 +239,7 @@ function drawChart2(gen,g){
 }
 function drawChart3(usage,g){
   if(!usage.length){document.getElementById('chart3').innerHTML='<div class="no-data">데이터 없음</div>';return;}
-  const xs=usage.map(d=>d[g.xKey]),unit=kwhUnit(granularity);
+  const xs=usage.map(d=>xLabel(d,g)),unit=kwhUnit(granularity);
   const uY=usage.map(d=>+toUnit(d.total_usage,granularity).toFixed(2)),sY=usage.map(d=>+toUnit(d.total_solar,granularity).toFixed(2));
   const tU={x:xs,y:uY,type:'bar',name:'전력사용량',marker:{color:'#475569',opacity:0.9},hovertemplate:'<b>%{x}</b><br>전력사용량: %{y:,.1f} '+unit+'<extra></extra>'};
   const tS={x:xs,y:sY,type:'bar',name:'태양광 발전량',marker:{color:'#f59e0b'},hovertemplate:'<b>%{x}</b><br>태양광 발전량: %{y:,.1f} '+unit+'<extra></extra>'};
@@ -247,7 +248,7 @@ function drawChart3(usage,g){
 }
 function drawChart4(usage,g){
   if(!usage.length){document.getElementById('chart4').innerHTML='<div class="no-data">데이터 없음</div>';return;}
-  const xs=usage.map(d=>d[g.xKey]),ratios=usage.map(d=>d.solar_ratio);
+  const xs=usage.map(d=>xLabel(d,g)),ratios=usage.map(d=>d.solar_ratio);
   const avg=ratios.reduce((a,b)=>a+b)/ratios.length;
   const modeM={daily:'lines',weekly:'lines+markers',monthly:'lines+markers'},mSz={daily:0,weekly:4,monthly:6};
   Plotly.newPlot('chart4',[
