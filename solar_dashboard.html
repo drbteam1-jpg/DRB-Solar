@@ -315,13 +315,15 @@ function chatPrevMonth(ym){let[y,m]=ym.split('-').map(Number);m--;if(m===0){m=12
 function chatYearFull(y){const n=+y;return n<100?2000+n:n;}
 
 // 문자열 안에서 기간 표현을 "전부" 찾아 순서대로 배열로 반환 (다중 기간 비교/나열 질문 지원)
-const CHAT_PERIOD_RE=/(?<ry>\d{2,4})\s*년\s*(?<rm1>\d{1,2})\s*[~\-]\s*(?<rm2>\d{1,2})\s*월|(?<my>\d{2,4})\s*년\s*(?<mm>\d{1,2})\s*월|(?<r2m1>\d{1,2})\s*[~\-]\s*(?<r2m2>\d{1,2})\s*월|(?<smm>\d{1,2})\s*월(?!평균|간)|(?<thisM>이번\s*달|이달|당월)|(?<lastM>지난\s*달|저번\s*달|전달)|(?<thisY>올해|금년)|(?<lastY>작년)|(?<today>오늘)|(?<yest>어제)|(?<recD>최근\s*\d+\s*일)|(?<recM>최근\s*\d+\s*개?월)/g;
+// fy/fm~ty/tm: "24년9월~25년8월"처럼 두 지점 모두 연도가 따로 붙는 범위 (연도가 다른 12개월 구간 등) — 가장 먼저 시도
+const CHAT_PERIOD_RE=/(?<fy>\d{2,4})\s*년\s*(?<fm>\d{1,2})\s*월\s*[~\-]\s*(?<ty>\d{2,4})\s*년\s*(?<tm>\d{1,2})\s*월|(?<ry>\d{2,4})\s*년\s*(?<rm1>\d{1,2})\s*[~\-]\s*(?<rm2>\d{1,2})\s*월|(?<my>\d{2,4})\s*년\s*(?<mm>\d{1,2})\s*월|(?<r2m1>\d{1,2})\s*[~\-]\s*(?<r2m2>\d{1,2})\s*월|(?<smm>\d{1,2})\s*월(?!평균|간)|(?<thisM>이번\s*달|이달|당월)|(?<lastM>지난\s*달|저번\s*달|전달)|(?<thisY>올해|금년)|(?<lastY>작년)|(?<today>오늘)|(?<yest>어제)|(?<recD>최근\s*\d+\s*일)|(?<recM>최근\s*\d+\s*개?월)/g;
 function chatFindAllPeriods(text){
   const lastYM=RAW.daily[RAW.daily.length-1].date.slice(0,7),lastYear=+lastYM.slice(0,4);
   const out=[];
   for(const m of text.matchAll(CHAT_PERIOD_RE)){
     const g=m.groups;
-    if(g.ry!==undefined){const y=chatYearFull(g.ry),m1=+g.rm1,m2=+g.rm2;out.push({mode:'monthRange',year:y,m1,m2,label:y+'년 '+m1+'~'+m2+'월'});}
+    if(g.fy!==undefined){const y1=chatYearFull(g.fy),m1=+g.fm,y2=chatYearFull(g.ty),m2=+g.tm;out.push({mode:'yearMonthRange',y1,m1,y2,m2,label:y1+'년 '+m1+'월~'+y2+'년 '+m2+'월'});}
+    else if(g.ry!==undefined){const y=chatYearFull(g.ry),m1=+g.rm1,m2=+g.rm2;out.push({mode:'monthRange',year:y,m1,m2,label:y+'년 '+m1+'~'+m2+'월'});}
     else if(g.my!==undefined){const y=chatYearFull(g.my),mo=+g.mm;const ym=y+'-'+String(mo).padStart(2,'0');out.push({mode:'month',ym,label:chatMonthLabel(ym)});}
     else if(g.r2m1!==undefined){const m1=+g.r2m1,m2=+g.r2m2;out.push({mode:'monthRange',year:lastYear,m1,m2,label:lastYear+'년 '+m1+'~'+m2+'월'});}
     else if(g.smm!==undefined){const mo=+g.smm;const ym=lastYear+'-'+String(mo).padStart(2,'0');out.push({mode:'month',ym,label:chatMonthLabel(ym)});}
@@ -344,9 +346,26 @@ function chatPeriodRange(period){
     const y2=period.m2<period.m1?period.year+1:period.year;
     return{from:period.year+'-'+String(period.m1).padStart(2,'0')+'-01',to:y2+'-'+String(period.m2).padStart(2,'0')+'-31'};
   }
+  if(period.mode==='yearMonthRange'){
+    return{from:period.y1+'-'+String(period.m1).padStart(2,'0')+'-01',to:period.y2+'-'+String(period.m2).padStart(2,'0')+'-31'};
+  }
   if(period.mode==='recentDays'){const arr=RAW.daily.slice(-period.n);return arr.length?{from:arr[0].date,to:arr[arr.length-1].date}:{from:'9999-99-99',to:'0000-00-00'};}
   if(period.mode==='recentMonths'){const last=RAW.daily[RAW.daily.length-1].date,dt=new Date(last);dt.setMonth(dt.getMonth()-period.n);return{from:dt.toISOString().slice(0,10),to:last};}
   return{from:null,to:null};   // 'all'
+}
+// monthRange/yearMonthRange 기간에 포함된 'YYYY-MM' 목록 (월별 비교용). 그 외 모드는 null.
+function chatMonthsInRange(period){
+  let y1,m1,y2,m2;
+  if(period.mode==='yearMonthRange'){y1=period.y1;m1=period.m1;y2=period.y2;m2=period.m2;}
+  else if(period.mode==='monthRange'){y1=period.year;m1=period.m1;y2=period.m2<period.m1?period.year+1:period.year;m2=period.m2;}
+  else return null;
+  const out=[];let y=y1,m=m1;
+  while(y<y2||(y===y2&&m<=m2)){
+    out.push(y+'-'+String(m).padStart(2,'0'));
+    m++;if(m>12){m=1;y++;}
+    if(out.length>60)break;   // 안전장치
+  }
+  return out;
 }
 function chatFilterDaily(period){
   if(period.mode==='day'){const i=RAW.daily.length+period.idx;return i>=0?[RAW.daily[i]]:[];}
@@ -419,8 +438,31 @@ function chatWhyFactoryAnswer(){
   if(metric==='hours')note='<br><br>※ 발전시간은 이미 설비용량(kW) 대비로 계산된 값이라 설비 규모 차이 때문은 아니에요. 음영·오염·인버터 상태 등이 원인일 수 있으니 해당 날짜를 확인해보시는 게 좋아요.';
   return'<b>'+period.label+' '+chatFactoryLabel(facs[0])+' vs '+chatFactoryLabel(facs[1])+' 차이가 컸던 날 (상위 '+rows.length+'개)</b><br>'+lines.join('<br>')+note;
 }
+// 두 기간이 모두 여러 달짜리 범위(monthRange/yearMonthRange)이고 길이가 같으면,
+// 같은 순번의 달끼리 짝지어 어느 달에서 차이가 가장 컸는지 보여준다 (예: 1년 vs 1년의 9월끼리 비교).
+function chatMonthByMonthCompare(period1,period2,fac,metric){
+  const months1=chatMonthsInRange(period1),months2=chatMonthsInRange(period2);
+  if(!months1||!months2||months1.length!==months2.length)return null;
+  const arr=(metric==='usage'||metric==='ratio')?RAW.monthly_usage:RAW.monthly_gen;
+  const field=chatGapField(metric)+fac;
+  const byMonth={};arr.forEach(r=>{byMonth[r.month]=r;});
+  const rows=months1.map((mo1,i)=>{
+    const mo2=months2[i];
+    const v1=(byMonth[mo1]||{})[field]||0,v2=(byMonth[mo2]||{})[field]||0;
+    return{mo1,mo2,v1,v2,gap:Math.abs(v1-v2)};
+  });
+  rows.sort((a,b)=>b.gap-a.gap);
+  return rows;
+}
 function chatWhyPeriodAnswer(){
   const{periods,facs,metrics}=chatLastCtx,metric=metrics[0],fac=facs[0];
+  const rows=chatMonthByMonthCompare(periods[0],periods[1],fac,metric);
+  if(rows){
+    if(!rows.length||rows[0].gap===0)return'월별로 봐도 뚜렷하게 차이나는 달은 없었어요.';
+    const unit=chatGapUnit(metric),top=rows.slice(0,3);
+    const lines=top.map(r=>'· '+chatMonthLabel(r.mo1)+' vs '+chatMonthLabel(r.mo2)+': '+chatGapValFmt(metric,r.v1)+unit+' → '+chatGapValFmt(metric,r.v2)+unit+' (차이 '+chatGapValFmt(metric,r.gap)+unit+')');
+    return'<b>'+periods[0].label+' vs '+periods[1].label+' '+chatFactoryLabel(fac)+' — 차이가 컸던 달 (상위 '+top.length+'개)</b><br>'+lines.join('<br>');
+  }
   const s1=chatStats(periods[0],fac),s2=chatStats(periods[1],fac);
   const pick=s=>metric==='gen'?s.kwh:metric==='hours'?s.hrs:metric==='usage'?s.usage:s.ratio;
   const v1=pick(s1),v2=pick(s2),diff=v2-v1,pct=v1!==0?(diff/v1*100):null,unit=chatGapUnit(metric);
@@ -487,7 +529,20 @@ function chatAnswer(text){
       });
       return'· <b>'+period.label+'</b><br>'+rows.join('<br>');
     });
-    return'<b>기간별 비교</b><br>'+blocks.join('<br>');
+    let out='<b>기간별 비교</b><br>'+blocks.join('<br>');
+    // 같은 메시지에 "특정월에 차이가 있어?" 같은 요청이 함께 있으면 월별 비교도 바로 붙여준다
+    if(periods.length===2&&facs.length===1&&/특정\s*월|어느\s*달|몇\s*월|월별로|월별\s*차이/.test(text)){
+      const mbm=chatMonthByMonthCompare(periods[0],periods[1],facs[0],metrics[0]);
+      if(mbm){
+        if(!mbm.length||mbm[0].gap===0)out+='<br><br>월별로 봐도 뚜렷하게 차이나는 달은 없었어요.';
+        else{
+          const unit=chatGapUnit(metrics[0]),top=mbm.slice(0,3);
+          const lines=top.map(r=>'· '+chatMonthLabel(r.mo1)+' vs '+chatMonthLabel(r.mo2)+': '+chatGapValFmt(metrics[0],r.v1)+unit+' → '+chatGapValFmt(metrics[0],r.v2)+unit+' (차이 '+chatGapValFmt(metrics[0],r.gap)+unit+')');
+          out+='<br><br><b>차이가 컸던 달 (상위 '+top.length+'개)</b><br>'+lines.join('<br>');
+        }
+      }
+    }
+    return out;
   }
 
   // 기간 1개, 공장 1개 이상 → 요약
