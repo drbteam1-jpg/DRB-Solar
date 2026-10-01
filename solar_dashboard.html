@@ -75,7 +75,7 @@
   @keyframes chatPulse { 0%,100% { box-shadow:0 4px 20px rgba(14,165,233,.55),0 0 0 0 rgba(45,212,191,.45); } 50% { box-shadow:0 4px 24px rgba(14,165,233,.7),0 0 0 8px rgba(45,212,191,0); } }
   .chat-fab { position:fixed; bottom:24px; right:24px; width:58px; height:58px; border-radius:50%; background:linear-gradient(135deg,#2dd4bf 0%,#0ea5e9 100%); color:#fff; border:2px solid rgba(255,255,255,.15); font-size:1.6rem; cursor:pointer; z-index:1000; display:flex; align-items:center; justify-content:center; transition:transform .2s ease; animation:chatPulse 2.8s ease-in-out infinite; }
   .chat-fab:hover { transform:scale(1.1) rotate(-4deg); animation-play-state:paused; }
-  .chat-panel { position:fixed; bottom:92px; right:24px; width:340px; max-width:calc(100vw - 32px); height:460px; max-height:calc(100vh - 120px); background:#1e293b; border:1px solid #334155; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,.5); display:none; flex-direction:column; overflow:hidden; z-index:1000; }
+  .chat-panel { position:fixed; bottom:92px; right:24px; width:430px; max-width:calc(100vw - 32px); height:620px; max-height:calc(100vh - 120px); background:#1e293b; border:1px solid #334155; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,.5); display:none; flex-direction:column; overflow:hidden; z-index:1000; }
   .chat-header { background:linear-gradient(135deg,#0ea5e9 0%,#134e6b 55%,#111827 100%); padding:12px 16px; border-bottom:1px solid #334155; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
   .chat-header span { font-weight:700; font-size:.9rem; color:#f1f5f9; display:flex; align-items:center; gap:7px; }
   .chat-header .chat-dot { width:7px; height:7px; border-radius:50%; background:#34d399; box-shadow:0 0 6px #34d399; display:inline-block; }
@@ -90,6 +90,27 @@
   .chat-input-row input:focus { border-color:#38bdf8; }
   .chat-input-row button { background:#0ea5e9; color:#fff; border:none; border-radius:8px; padding:8px 14px; font-size:.82rem; font-weight:600; cursor:pointer; flex-shrink:0; }
   .chat-input-row button:hover { background:#0284c7; }
+  .chat-panel.chat-wide { width:760px; height:calc(100vh - 120px); }
+  .chat-hbtns { display:flex; gap:10px; align-items:center; }
+  .chat-bot { max-width:94%; }
+  .chat-chips { display:flex; flex-wrap:wrap; gap:6px; padding:8px 12px 0; flex-shrink:0; }
+  .chat-chip { background:#1e3a4c; border:1px solid #2b5c74; color:#bae6fd; border-radius:14px; padding:4px 10px; font-size:.74rem; cursor:pointer; font-family:inherit; }
+  .chat-chip:hover { background:#0e7490; color:#fff; }
+  .chat-msg h4 { margin:10px 0 4px; font-size:.8rem; color:#7dd3fc; }
+  .chat-msg h4:first-child { margin-top:0; }
+  .an-tbl { border-collapse:collapse; width:100%; margin:4px 0; font-size:.74rem; }
+  .an-tbl th { background:#1e293b; color:#94a3b8; font-weight:600; padding:3px 5px; border-bottom:1px solid #475569; text-align:right; white-space:nowrap; }
+  .an-tbl td { padding:3px 5px; border-bottom:1px solid #334155; text-align:right; white-space:nowrap; }
+  .an-tbl th:first-child, .an-tbl td:first-child { text-align:left; }
+  .an-tbl tr.an-flag td { background:rgba(248,113,113,.10); }
+  .an-up { color:#34d399; } .an-dn { color:#f87171; } .an-mut { color:#64748b; }
+  .an-tag { display:inline-block; padding:0 6px; border-radius:8px; font-size:.68rem; font-weight:600; margin-left:3px; }
+  .an-warn { background:rgba(248,113,113,.18); color:#fca5a5; }
+  .an-info { background:rgba(56,189,248,.16); color:#7dd3fc; }
+  .an-ok { background:rgba(52,211,153,.16); color:#6ee7b7; }
+  .an-box { background:#1e293b; border-left:3px solid #38bdf8; padding:6px 8px; margin:6px 0 2px; border-radius:4px; }
+  .an-note { color:#94a3b8; font-size:.72rem; }
+  .chat-chart { width:100%; height:190px; margin-top:6px; }
 </style>
 </head>
 <body>
@@ -186,8 +207,9 @@
 </div>
 <button class="chat-fab" id="chatFab" onclick="chatToggle()" title="발전량 Q&amp;A 챗봇">&#128172;</button>
 <div class="chat-panel" id="chatPanel">
-  <div class="chat-header"><span>&#9728;&#65039; 발전량 Q&amp;A 챗봇<i class="chat-dot"></i></span><button class="chat-close" onclick="chatToggle()">&#10005;</button></div>
+  <div class="chat-header"><span>&#9728;&#65039; 발전량 분석 챗봇<i class="chat-dot"></i></span><div class="chat-hbtns"><button class="chat-close" onclick="chatWide()" title="크게 보기">&#10530;</button><button class="chat-close" onclick="chatToggle()">&#10005;</button></div></div>
   <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-chips" id="chatChips"></div>
   <div class="chat-input-row">
     <input type="text" id="chatInput" placeholder="예: 이번달 발전량 알려줘">
     <button onclick="chatSend()">전송</button>
@@ -308,15 +330,17 @@ setQuick(12,document.getElementById('q12'));
 setGran('monthly',document.getElementById('gM'));
 window.addEventListener('resize',()=>{['chart1','chart2','chart3','chart4'].forEach(id=>{try{Plotly.relayout(id,{});}catch(e){}});});
 
-// ── 챗봇 (내장 데이터 기반 규칙형 Q&A, 외부 API 호출 없음) ──────────────────
-const CHAT_EXAMPLES=['이번달 발전량 알려줘','1공장 8월 발전시간','지난달 사용비율','1공장이랑 2공장 비교해줘','25년1~7월과 26년1~7월 사용량 비교해줘','최근 7일 발전량'];
+// ── 챗봇 (내장 데이터 기반 규칙형 Q&A + 분석 엔진, 외부 API 호출 없음) ──────────────────
+const CHAT_EXAMPLES=['이번달 종합 분석해줘','1,2공장 발전량 이상 징후 점검해줘','발전량 추세 분석해줘','9월 전년 대비 증감','발전량 가장 많은 날 Top 5','다음달 발전량 예측','올해 목표 3.5h 달성률','1공장 8월 발전시간','25년 상반기와 26년 상반기 비교'];
+// 입력창 위 빠른 질문 버튼 (표시 문구, 실제 질문)
+const CHAT_CHIPS=[['📋 종합 분석','이번달 종합 분석해줘'],['🔍 이상 징후','1,2공장 발전량 이상 징후 점검해줘'],['📈 추세','발전량 추세 분석해줘'],['↕ 전년 대비','전년 대비 증감 알려줘'],['🏆 Top 5','발전량 가장 많은 날 Top 5'],['🔮 예측','다음달 발전량 예측해줘'],['🎯 목표 달성','올해 목표 3.5h 달성률']];
 function chatMonthLabel(ym){const[y,m]=ym.split('-');return y+'년 '+(+m)+'월';}
 function chatPrevMonth(ym){let[y,m]=ym.split('-').map(Number);m--;if(m===0){m=12;y--;}return y+'-'+String(m).padStart(2,'0');}
 function chatYearFull(y){const n=+y;return n<100?2000+n:n;}
 
 // 문자열 안에서 기간 표현을 "전부" 찾아 순서대로 배열로 반환 (다중 기간 비교/나열 질문 지원)
 // fy/fm~ty/tm: "24년9월~25년8월"처럼 두 지점 모두 연도가 따로 붙는 범위 (연도가 다른 12개월 구간 등) — 가장 먼저 시도
-const CHAT_PERIOD_RE=/(?<fy>\d{2,4})\s*년\s*(?<fm>\d{1,2})\s*월\s*[~\-]\s*(?<ty>\d{2,4})\s*년\s*(?<tm>\d{1,2})\s*월|(?<ry>\d{2,4})\s*년\s*(?<rm1>\d{1,2})\s*[~\-]\s*(?<rm2>\d{1,2})\s*월|(?<my>\d{2,4})\s*년\s*(?<mm>\d{1,2})\s*월|(?<r2m1>\d{1,2})\s*[~\-]\s*(?<r2m2>\d{1,2})\s*월|(?<smm>\d{1,2})\s*월(?!평균|간)|(?<thisM>이번\s*달|이달|당월)|(?<lastM>지난\s*달|저번\s*달|전달)|(?<thisY>올해|금년)|(?<lastY>작년)|(?<today>오늘)|(?<yest>어제)|(?<recD>최근\s*\d+\s*일)|(?<recM>최근\s*\d+\s*개?월)/g;
+const CHAT_PERIOD_RE=/(?<fy>\d{2,4})\s*년\s*(?<fm>\d{1,2})\s*월\s*[~\-]\s*(?<ty>\d{2,4})\s*년\s*(?<tm>\d{1,2})\s*월|(?<ry>\d{2,4})\s*년\s*(?<rm1>\d{1,2})\s*[~\-]\s*(?<rm2>\d{1,2})\s*월|(?<my>\d{2,4})\s*년\s*(?<mm>\d{1,2})\s*월|(?<hy>\d{2,4})\s*년\s*(?<half>상|하)\s*반기|(?<qy>\d{2,4})\s*년\s*(?<q>[1-4])\s*분기|(?<yo>\d{2,4})\s*년(?!\s*\d)|(?<half2>상|하)\s*반기|(?<q2>[1-4])\s*분기|(?<recY>최근\s*\d+\s*년)|(?<r2m1>\d{1,2})\s*[~\-]\s*(?<r2m2>\d{1,2})\s*월|(?<smm>\d{1,2})\s*월(?!평균|간)|(?<thisM>이번\s*달|이달|당월)|(?<lastM>지난\s*달|저번\s*달|전달)|(?<thisY>올해|금년)|(?<lastY>작년)|(?<today>오늘)|(?<yest>어제)|(?<recD>최근\s*\d+\s*일)|(?<recM>최근\s*\d+\s*개?월)/g;
 function chatFindAllPeriods(text){
   const lastYM=RAW.daily[RAW.daily.length-1].date.slice(0,7),lastYear=+lastYM.slice(0,4);
   const out=[];
@@ -325,6 +349,10 @@ function chatFindAllPeriods(text){
     if(g.fy!==undefined){const y1=chatYearFull(g.fy),m1=+g.fm,y2=chatYearFull(g.ty),m2=+g.tm;out.push({mode:'yearMonthRange',y1,m1,y2,m2,label:y1+'년 '+m1+'월~'+y2+'년 '+m2+'월'});}
     else if(g.ry!==undefined){const y=chatYearFull(g.ry),m1=+g.rm1,m2=+g.rm2;out.push({mode:'monthRange',year:y,m1,m2,label:y+'년 '+m1+'~'+m2+'월'});}
     else if(g.my!==undefined){const y=chatYearFull(g.my),mo=+g.mm;const ym=y+'-'+String(mo).padStart(2,'0');out.push({mode:'month',ym,label:chatMonthLabel(ym)});}
+    else if(g.hy!==undefined||g.half2!==undefined){const y=g.hy!==undefined?chatYearFull(g.hy):lastYear,h1=(g.half||g.half2)==='상';out.push({mode:'yearMonthRange',y1:y,m1:h1?1:7,y2:y,m2:h1?6:12,label:y+'년 '+(h1?'상':'하')+'반기'});}
+    else if(g.qy!==undefined||g.q2!==undefined){const y=g.qy!==undefined?chatYearFull(g.qy):lastYear,q=+(g.q||g.q2);out.push({mode:'yearMonthRange',y1:y,m1:q*3-2,y2:y,m2:q*3,label:y+'년 '+q+'분기'});}
+    else if(g.yo!==undefined){const y=chatYearFull(g.yo);out.push({mode:'year',year:y,label:y+'년'});}
+    else if(g.recY!==undefined){const n=+g.recY.match(/\d+/)[0];out.push({mode:'recentMonths',n:n*12,label:'최근 '+n+'년'});}
     else if(g.r2m1!==undefined){const m1=+g.r2m1,m2=+g.r2m2;out.push({mode:'monthRange',year:lastYear,m1,m2,label:lastYear+'년 '+m1+'~'+m2+'월'});}
     else if(g.smm!==undefined){const mo=+g.smm;const ym=lastYear+'-'+String(mo).padStart(2,'0');out.push({mode:'month',ym,label:chatMonthLabel(ym)});}
     else if(g.thisM!==undefined)out.push({mode:'month',ym:lastYM,label:chatMonthLabel(lastYM)});
@@ -358,6 +386,7 @@ function chatMonthsInRange(period){
   let y1,m1,y2,m2;
   if(period.mode==='yearMonthRange'){y1=period.y1;m1=period.m1;y2=period.y2;m2=period.m2;}
   else if(period.mode==='monthRange'){y1=period.year;m1=period.m1;y2=period.m2<period.m1?period.year+1:period.year;m2=period.m2;}
+  else if(period.mode==='year'){y1=y2=period.year;m1=1;m2=12;}
   else return null;
   const out=[];let y=y1,m=m1;
   while(y<y2||(y===y2&&m<=m2)){
@@ -389,7 +418,7 @@ function chatStats(period,fac){
 function chatFactoryLabel(fac){return fac==='all'?'전체':fac+'공장';}
 function chatDetectFactories(text){
   const has1=/1\s*공장/.test(text),has2=/2\s*공장/.test(text);
-  if((has1&&has2)||/각각|각자|공장별/.test(text))return['1','2'];
+  if((has1&&has2)||/각각|각자|공장\s*별|1\s*[,·및와과&\/]\s*2\s*공장|양\s*공장|두\s*공장|공장\s*간/.test(text))return['1','2'];
   if(has1)return['1'];
   if(has2)return['2'];
   return['all'];
@@ -472,6 +501,463 @@ function chatWhyPeriodAnswer(){
   return'<b>'+periods[0].label+' vs '+periods[1].label+' '+chatFactoryLabel(fac)+'</b><br>'+txt+'했어요.<br><br>날짜별로 어디서 차이가 컸는지 보려면 "1공장이랑 2공장 비교해줘"처럼 기간을 좁혀서 다시 물어보셔도 좋아요.';
 }
 
+// ══ 데이터 분석 엔진 (이상 징후 · 추세 · 증감 · 순위 · 예측 · 목표 · 통계 · 종합) ══════════
+// 모든 계산은 페이지에 내장된 RAW 데이터로 브라우저 안에서 수행 (외부 API 호출 없음)
+const AN_GEN_M={},AN_USE_M={};
+RAW.monthly_gen.forEach(r=>{AN_GEN_M[r.month]=r;});
+RAW.monthly_usage.forEach(r=>{AN_USE_M[r.month]=r;});
+const AN_TARGET_H=3.5;   // 발전시간 목표 (차트 기준선과 동일)
+const AN_YOY_FLAG=15;    // 전년 동월 대비 ±15% 이상이면 "큰 변화"
+const AN_GAP_FLAG=8;     // 두 공장의 전년비 차이가 8%p 이상이면 "공장 간 편차"
+const AN_EQUIP_DEV=15;   // 1공장/2공장 발전시간 비율이 평소(±15일 중앙값)보다 15% 이상 벗어나면 "설비 의심"
+let anPendingCharts=[],anChartSeq=0;
+
+function anLastDate(){return RAW.daily[RAW.daily.length-1].date;}
+function anLastYM(){return anLastDate().slice(0,7);}
+function anAddM(ym,n){let[y,m]=ym.split('-').map(Number);m+=n;while(m<1){m+=12;y--;}while(m>12){m-=12;y++;}return y+'-'+String(m).padStart(2,'0');}
+function anDaysIn(ym){const[y,m]=ym.split('-').map(Number);return new Date(y,m,0).getDate();}
+function anComplete(ym){const r=AN_GEN_M[ym];return!!r&&r.days>=anDaysIn(ym)-1;}
+function anShortYM(ym){return ym.slice(2,4)+'.'+ym.slice(5,7);}
+function anMD(date){return(+date.slice(5,7))+'/'+(+date.slice(8,10));}
+function anDow(date){return'일월화수목금토'[new Date(date+'T00:00:00').getDay()];}
+function anMean(a){return a.length?a.reduce((p,q)=>p+q,0)/a.length:null;}
+function anMedian(a){if(!a.length)return null;const s=[...a].sort((x,y)=>x-y),k=s.length>>1;return s.length%2?s[k]:(s[k-1]+s[k])/2;}
+function anStd(a){if(a.length<2)return 0;const m=anMean(a);return Math.sqrt(a.reduce((s,v)=>s+(v-m)*(v-m),0)/(a.length-1));}
+function anSlope(ys){const n=ys.length;if(n<2)return 0;const mx=(n-1)/2,my=anMean(ys);let num=0,den=0;ys.forEach((y,i)=>{num+=(i-mx)*(y-my);den+=(i-mx)*(i-mx);});return num/den;}
+function anPct(cur,base){return cur==null||!base?null:(cur-base)/base*100;}
+function anPctHtml(v,unit){if(v==null||isNaN(v))return'<span class="an-mut">-</span>';return'<span class="'+(v>=0?'an-up':'an-dn')+'">'+(v>=0?'▲':'▼')+chatFmt(Math.abs(v),1)+(unit||'%')+'</span>';}
+function anTag(txt,cls){return'<span class="an-tag an-'+(cls||'info')+'">'+txt+'</span>';}
+function anMetricName(m){return{gen:'발전량',hours:'발전시간',usage:'전력사용량',ratio:'태양광 사용비율'}[m];}
+function anUnit(m){return{gen:'MWh',hours:'h',usage:'MWh',ratio:'%'}[m];}
+function anCell(m,v){if(v==null||isNaN(v))return'-';return m==='gen'||m==='usage'?chatFmt(v/1000,1):m==='hours'?chatFmt(v,2):chatFmt(v,1);}
+function anFacs(facs){return facs[0]==='all'?['all','1','2']:facs;}
+// 월 단위 지표값. gen=총 kWh, genAvg=일평균 kWh, hours=평균 발전시간, usage=사용량 kWh, ratio=사용비율 %
+function anMonthVal(ym,fac,metric){
+  if(metric==='usage'||metric==='ratio'){const r=AN_USE_M[ym];if(!r)return null;return metric==='usage'?r['usage_'+fac]:r['ratio_'+fac];}
+  const r=AN_GEN_M[ym];if(!r)return null;
+  if(metric==='hours')return r['hrs_'+fac];
+  if(metric==='genAvg')return r.days?r['kwh_'+fac]/r.days:null;
+  return r['kwh_'+fac];
+}
+// 증감 비교용 값: 발전량은 일수가 다른 달(진행 중인 달 등)도 공정하게 비교되도록 일평균 기준
+function anCmpVal(ym,fac,metric){return metric==='gen'?anMonthVal(ym,fac,'genAvg'):anMonthVal(ym,fac,metric);}
+// 증감 표시: 사용비율은 %p 차이, 나머지는 % 변화율
+function anChg(metric,ym,baseYM,fac){
+  const c=anCmpVal(ym,fac,metric),b=anCmpVal(baseYM,fac,metric);
+  if(c==null||b==null)return null;
+  return metric==='ratio'?c-b:anPct(c,b);
+}
+function anChgHtml(metric,v){return anPctHtml(v,metric==='ratio'?'%p':'%');}
+function anDailyField(metric){return{gen:'kwh_',hours:'hrs_',usage:'usage_',ratio:'ratio_'}[metric];}
+function anDailyRows(metric,from,to){return(metric==='usage'||metric==='ratio'?RAW.usage:RAW.daily).filter(d=>d.date>=from&&d.date<=to);}
+// 질문 속 기간 → {from,to,label}. 기간이 없으면 최근 defMonths개월
+function anScope(periods,defMonths){
+  if(periods.length){
+    const p=periods[0];
+    if(p.mode==='day'){const d=chatFilterDaily(p);return d.length?{from:d[0].date,to:d[0].date,label:p.label}:null;}
+    const r=chatPeriodRange(p);return{from:r.from||RAW.daily[0].date,to:r.to||anLastDate(),label:p.label};
+  }
+  const fromYM=anAddM(anLastYM(),-(defMonths-1));
+  return{from:fromYM+'-01',to:anLastDate(),label:'최근 '+defMonths+'개월'};
+}
+function anMonthsIn(sc){return RAW.monthly_gen.map(r=>r.month).filter(m=>m>=sc.from.slice(0,7)&&m<=sc.to.slice(0,7));}
+function anStreaks(dates){
+  const out=[];
+  dates.forEach(dt=>{const last=out[out.length-1];if(last&&(new Date(dt)-new Date(last.to))/864e5===1){last.to=dt;last.n++;}else out.push({from:dt,to:dt,n:1});});
+  return out;
+}
+// ── 미니 차트: 답변 HTML에 자리(div)만 넣어두고, 말풍선이 화면에 붙은 뒤 Plotly로 그린다
+function anChart(traces,lay,height){
+  const id='anChart'+(++anChartSeq);
+  anPendingCharts.push({id,traces,lay:lay||{}});
+  return'<div class="chat-chart" id="'+id+'"'+(height?' style="height:'+height+'px"':'')+'></div>';
+}
+function anRenderCharts(){
+  const list=anPendingCharts;anPendingCharts=[];
+  list.forEach(c=>{
+    const el=document.getElementById(c.id);if(!el)return;
+    const ax={gridcolor:'#2d3f52',zerolinecolor:'#2d3f52',tickfont:{size:9},automargin:true};
+    const lay=Object.assign({paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)',margin:{t:6,r:8,b:26,l:40},
+      font:{family:'Malgun Gothic,Apple SD Gothic Neo,sans-serif',color:'#94a3b8',size:10},
+      legend:{orientation:'h',y:-0.25,font:{size:9},bgcolor:'rgba(0,0,0,0)'},
+      hoverlabel:{bgcolor:'#293548',bordercolor:'#475569',font:{color:'#e2e8f0',size:11}}},c.lay);
+    lay.xaxis=Object.assign({},ax,c.lay.xaxis||{});lay.yaxis=Object.assign({},ax,c.lay.yaxis||{});
+    Plotly.newPlot(el,c.traces,lay,CFG);
+  });
+}
+
+// ── 일별 이상일 탐지 ──
+// 두 공장은 같은 지역이라 날씨 영향을 똑같이 받는다. 그래서
+//  · 두 공장이 같이 떨어진 날            → 기상(흐림·강우) 영향
+//  · 한 공장만 평소 비율에서 벗어난 날    → 설비 이상 의심 (1공장/2공장 발전시간 비율을 ±15일 중앙값과 비교)
+//  · 한 공장만 발전량 0                  → 정지 또는 데이터 누락
+function anDailyScan(from,to){
+  const dl=RAW.daily,res={equip:[],weather:[],stop:[],high:[],days:0};
+  for(let i=0;i<dl.length;i++){
+    const d=dl[i];if(d.date<from||d.date>to)continue;
+    res.days++;
+    const win=dl.slice(Math.max(0,i-15),i+16).filter(x=>x!==d);
+    const medAll=anMedian(win.map(x=>x.hrs_all));
+    const relMed=anMedian(win.filter(x=>x.hrs_1>1.5&&x.hrs_2>1.5).map(x=>x.hrs_1/x.hrs_2));
+    if(d.kwh_1===0||d.kwh_2===0){res.stop.push({date:d.date,fac:d.kwh_1===0&&d.kwh_2===0?'all':d.kwh_1===0?'1':'2'});continue;}
+    if(relMed&&d.hrs_1>1.5&&d.hrs_2>1.5){
+      const dev=(d.hrs_1/d.hrs_2/relMed-1)*100;
+      if(Math.abs(dev)>=AN_EQUIP_DEV)res.equip.push({date:d.date,dev,fac:dev<0?'1':'2',h1:d.hrs_1,h2:d.hrs_2});
+    }
+    if(medAll&&d.hrs_all<medAll*0.6)res.weather.push({date:d.date,hrs:d.hrs_all,med:medAll});
+    else if(medAll&&d.hrs_all>medAll*1.3)res.high.push({date:d.date,hrs:d.hrs_all,med:medAll});
+  }
+  return res;
+}
+// ── 공장 간 상대효율 (1공장 발전시간 ÷ 2공장 발전시간, 월별) ──
+// 날씨는 두 공장에 똑같이 작용하므로 이 비율은 일정해야 정상. 계속 변하면 한쪽 설비 성능이 변하고 있다는 신호.
+function anRelSummary(){
+  const s=RAW.monthly_gen.filter(r=>anComplete(r.month)&&r.hrs_2>0).map(r=>({month:r.month,rel:r.hrs_1/r.hrs_2}));
+  if(s.length<6)return null;
+  const baseN=Math.min(12,Math.floor(s.length/2)),base=anMedian(s.slice(0,baseN).map(x=>x.rel));
+  const recent=anMean(s.slice(-3).map(x=>x.rel));
+  return{s,base,baseFrom:s[0].month,baseTo:s[baseN-1].month,recent,chg:anPct(recent,base),slopeY:anSlope(s.map(x=>x.rel))*12/base*100};
+}
+function anRelHtml(rel,withChart){
+  const st=rel.chg<=-3?anTag('1공장 상대 저하','warn'):rel.chg>=3?anTag('2공장 상대 저하','warn'):anTag('정상 범위','ok');
+  let h='초기('+anShortYM(rel.baseFrom)+'~'+anShortYM(rel.baseTo)+') <b>'+rel.base.toFixed(3)+'</b> → 최근 3개월 <b>'+rel.recent.toFixed(3)+'</b> '+anPctHtml(rel.chg)+' '+st
+    +'<br><span class="an-note">연간 추세 '+(rel.slopeY>=0?'+':'−')+chatFmt(Math.abs(rel.slopeY),1)+'%/년 · 1.000보다 작으면 1공장 발전시간이 2공장보다 짧다는 뜻</span>';
+  if(withChart){
+    const xs=rel.s.map(x=>x.month);
+    h+=anChart([
+      {x:xs,y:rel.s.map(x=>+x.rel.toFixed(3)),type:'scatter',mode:'lines+markers',name:'1공장÷2공장',line:{color:'#38bdf8',width:2},marker:{size:4},hovertemplate:'%{x}: %{y:.3f}<extra></extra>'},
+      {x:[xs[0],xs[xs.length-1]],y:[rel.base,rel.base],type:'scatter',mode:'lines',name:'초기 기준 '+rel.base.toFixed(3),line:{color:'#fbbf24',width:1.5,dash:'dash'},hoverinfo:'skip'}
+    ],{xaxis:{type:'category',nticks:8}},170);
+  }
+  return h;
+}
+
+// ① 이상 징후 점검: "특별하게 감소/증가한 이슈 있어?"
+function anIssueReport(text,periods){
+  const metric=/사용량|전력\s*사용|전기\s*사용/.test(text)?'usage':/발전\s*시간/.test(text)?'hours':'gen';
+  const mSc=anScope(periods,12),dSc=periods.length?mSc:anScope([],3);
+  if(!mSc)return'해당 기간 데이터가 없어요.';
+  const months=anMonthsIn(mSc);
+  const both=[],gap=[],big=[];
+  let h='<b>🔍 1·2공장 '+anMetricName(metric)+' 이상 징후 점검</b><br><span class="an-note">월별: '+mSc.label+' · 일별: '+dSc.label+' · 계절 영향을 빼기 위해 전년 동월 대비로 판단</span>';
+  h+='<h4>① 월별 전년 동월 대비 ('+anUnit(metric)+')</h4><table class="an-tbl"><tr><th>월</th><th>1공장</th><th>전년비</th><th>2공장</th><th>전년비</th><th>판정</th></tr>';
+  months.forEach(m=>{
+    const v1=anMonthVal(m,'1',metric),v2=anMonthVal(m,'2',metric);
+    const y1=anChg(metric,m,anAddM(m,-12),'1'),y2=anChg(metric,m,anAddM(m,-12),'2');
+    let verdict='<span class="an-mut">정상</span>',flag=false;
+    if(y1==null||y2==null)verdict='<span class="an-mut">비교불가</span>';
+    else if(metric==='usage'){
+      if(Math.abs(y1)>=AN_YOY_FLAG||Math.abs(y2)>=AN_YOY_FLAG){flag=true;verdict=anTag('사용량 급변','warn');big.push({m,y1,y2});}
+    }else if(Math.abs(y1-y2)>=AN_GAP_FLAG){flag=true;verdict=anTag('공장 편차','warn');gap.push({m,y1,y2});}
+    else if(Math.abs(y1)>=AN_YOY_FLAG||Math.abs(y2)>=AN_YOY_FLAG){flag=true;verdict=anTag(y1<0?'동반 감소':'동반 증가','info');both.push({m,y1,y2});}
+    h+='<tr'+(flag?' class="an-flag"':'')+'><td>'+anShortYM(m)+(anComplete(m)?'':'*')+'</td><td>'+anCell(metric,v1)+'</td><td>'+anChgHtml(metric,y1)+'</td><td>'+anCell(metric,v2)+'</td><td>'+anChgHtml(metric,y2)+'</td><td>'+verdict+'</td></tr>';
+  });
+  h+='</table><span class="an-note">공장 편차: 두 공장 전년비 차이 '+AN_GAP_FLAG+'%p 이상(날씨로 설명 안 됨) · 동반 증감: 두 공장 모두 ±'+AN_YOY_FLAG+'% 이상(일사량 영향)</span>';
+
+  const rel=anRelSummary();
+  if(rel&&metric!=='usage')h+='<h4>② 공장 간 상대효율 (1공장 ÷ 2공장 발전시간)</h4>'+anRelHtml(rel,true);
+
+  const sc=anDailyScan(dSc.from,dSc.to);
+  h+='<h4>'+(metric==='usage'?'②':'③')+' 일별 이상일 ('+dSc.label+', '+sc.days+'일)</h4>';
+  if(sc.stop.length)h+='⛔ <b>발전 0 (정지/데이터 누락)</b>: '+sc.stop.map(s=>anMD(s.date)+'('+anDow(s.date)+') '+chatFactoryLabel(s.fac)).join(', ')+'<br>';
+  if(sc.equip.length){
+    const top=[...sc.equip].sort((a,b)=>Math.abs(b.dev)-Math.abs(a.dev)).slice(0,8).sort((a,b)=>a.date<b.date?-1:1);
+    h+='⚠ <b>설비 이상 의심 '+sc.equip.length+'일</b> <span class="an-note">(한 공장만 평소 대비 저조)</span><table class="an-tbl"><tr><th>날짜</th><th>1공장 h</th><th>2공장 h</th><th>평소 비율 대비</th><th>저조 공장</th></tr>'
+      +top.map(e=>'<tr><td>'+anMD(e.date)+'('+anDow(e.date)+')</td><td>'+e.h1.toFixed(2)+'</td><td>'+e.h2.toFixed(2)+'</td><td>'+anPctHtml(e.dev)+'</td><td>'+chatFactoryLabel(e.fac)+'</td></tr>').join('')+'</table>';
+    if(sc.equip.length>top.length)h+='<span class="an-note">편차가 큰 상위 '+top.length+'일만 표시</span><br>';
+  }else h+='✅ 한 공장만 떨어진 날(설비 의심) 없음<br>';
+  const wst=anStreaks(sc.weather.map(w=>w.date)),longW=wst.filter(s=>s.n>=2);
+  h+='☁ <b>양 공장 동반 저조 '+sc.weather.length+'일</b> <span class="an-note">(평소의 60% 미만 → 흐림·강우 추정)</span>';
+  if(longW.length)h+='<br>&nbsp;&nbsp;연속 저조: '+longW.map(s=>anMD(s.from)+'~'+anMD(s.to)+' ('+s.n+'일)').join(', ');
+  h+='<br>☀ 평소보다 30% 이상 높은 날 '+sc.high.length+'일';
+  if(metric!=='usage'){
+    const dd=RAW.daily.filter(d=>d.date>=dSc.from&&d.date<=dSc.to),mark=new Set(sc.equip.map(e=>e.date).concat(sc.stop.map(s=>s.date)));
+    const md=dd.filter(d=>mark.has(d.date));
+    h+=anChart([
+      {x:dd.map(d=>d.date),y:dd.map(d=>d.hrs_1),type:'scatter',mode:'lines',name:'1공장',line:{color:'#2dd4bf',width:1.3},hovertemplate:'%{x}<br>1공장 %{y:.2f}h<extra></extra>'},
+      {x:dd.map(d=>d.date),y:dd.map(d=>d.hrs_2),type:'scatter',mode:'lines',name:'2공장',line:{color:'#f59e0b',width:1.3},hovertemplate:'%{x}<br>2공장 %{y:.2f}h<extra></extra>'},
+      {x:md.map(d=>d.date),y:md.map(d=>Math.min(d.hrs_1,d.hrs_2)),type:'scatter',mode:'markers',name:'이상 의심',marker:{color:'#f87171',size:8,symbol:'x'},hovertemplate:'%{x} 이상 의심<extra></extra>'}
+    ],{xaxis:{type:'date'},yaxis:{title:{text:'h',font:{size:9}}}},170);
+  }
+
+  // 종합 의견
+  const ops=[];
+  if(gap.length){
+    const gm=new Set(gap.map(g=>g.m)),z=RAW.daily.filter(d=>gm.has(d.date.slice(0,7))&&(d.kwh_1===0||d.kwh_2===0));
+    ops.push('<b>공장 간 편차 '+gap.length+'개월</b> ('+gap.map(g=>anShortYM(g.m)).join(', ')+'): 날씨는 두 공장에 똑같이 작용하므로, 한 공장만 다르게 움직인 달은 <b>설비 요인</b>(오염·음영·인버터·정지)을 점검할 필요가 있어요.'
+      +(z.length?' 이 중 발전 0인 날: '+z.map(d=>d.date+' '+(d.kwh_1===0?'1공장':'2공장')).join(', ')+'.':''));
+  }
+  if(both.length)ops.push('<b>동반 증감 '+both.length+'개월</b> ('+both.map(g=>anShortYM(g.m)+' '+(g.y1<0?'↓':'↑')).join(', ')+'): 두 공장이 같이 움직였으므로 <b>일사량(기상) 차이</b>로 판단돼요.');
+  if(big.length){
+    ops.push('전력사용량이 전년 대비 ±'+AN_YOY_FLAG+'% 이상 바뀐 달: '+big.map(g=>anShortYM(g.m)).join(', ')+' — 생산량·설비 가동 변화 여부 확인 필요.');
+    const huge=big.filter(g=>Math.abs(g.y1)>=100||Math.abs(g.y2)>=100);
+    if(huge.length)ops.push('전년 대비 2배 이상 차이 나는 달('+huge.map(g=>anShortYM(g.m)).join(', ')+')은 실제 사용 변화보다 <b>계량 범위(검침 대상) 변경</b>일 가능성이 높아요.');
+  }
+  if(rel&&metric!=='usage'&&Math.abs(rel.chg)>=3)ops.push('<b>상대효율 '+(rel.chg<0?'하락':'상승')+'</b>: 1공장÷2공장 비율이 초기 대비 '+chatFmt(Math.abs(rel.chg),1)+'% '+(rel.chg<0?'낮아졌어요. 1공장 발전 성능 저하(모듈 오염·열화, 인버터 효율) 또는 2공장 개선(세척 등) 가능성이 있어요. 1공장 모듈 세척·인버터 점검을 권장해요.':'높아졌어요. 2공장 쪽 성능 저하 가능성을 점검해보세요.'));
+  if(sc.stop.length)ops.push('<b>발전 0인 날</b> '+sc.stop.map(s=>s.date+' '+chatFactoryLabel(s.fac)).join(', ')+' — 정지 사유 또는 데이터 누락 여부 확인 필요.');
+  if(sc.equip.length){const c1=sc.equip.filter(e=>e.fac==='1').length;ops.push('최근 일별 설비 의심일은 '+sc.equip.length+'일이며 '+(c1>=sc.equip.length-c1?'1공장':'2공장')+' 쪽이 더 많아요.');}
+  if(longW.length){const L=longW.reduce((a,b)=>b.n>=a.n?b:a);ops.push('가장 긴 저조 구간은 '+anMD(L.from)+'~'+anMD(L.to)+' ('+L.n+'일 연속, 양 공장 동반)으로 기상 영향으로 보여요.');}
+  if(!ops.length)ops.push('뚜렷한 이상 징후는 보이지 않아요.');
+  h+='<h4>'+(metric==='usage'?'③':'④')+' 종합 의견</h4><div class="an-box">'+ops.map(o=>'· '+o).join('<br>')+'</div>';
+  return h;
+}
+
+// ② 전월·전년 동월 대비 증감
+function anYtd(ym,fac){
+  const y=ym.slice(0,4),to=ym===anLastYM()?anLastDate():ym+'-31',pFrom=(+y-1)+'-01-01',pTo=(+y-1)+to.slice(4);
+  const cur=RAW.daily.filter(d=>d.date>=y+'-01-01'&&d.date<=to),prev=RAW.daily.filter(d=>d.date>=pFrom&&d.date<=pTo);
+  const cv=cur.reduce((s,d)=>s+d['kwh_'+fac],0),pv=prev.reduce((s,d)=>s+d['kwh_'+fac],0);
+  return{cv,pv,pct:prev.length>=cur.length*0.9?anPct(cv,pv):null,partialPrev:prev.length<cur.length*0.9,curDays:cur.length,prevDays:prev.length,label:(+y)+'년 1월~'+(+to.slice(5,7))+'월'};
+}
+function anSameMonthRank(ym,fac){
+  const mm=ym.slice(5),arr=RAW.monthly_gen.filter(r=>r.month.slice(5)===mm&&anComplete(r.month)).map(r=>({m:r.month,v:r['kwh_'+fac]})).sort((a,b)=>b.v-a.v);
+  const i=arr.findIndex(x=>x.m===ym);
+  return i<0?null:{rank:i+1,n:arr.length};
+}
+function anChangeReport(text,periods,facs,metrics){
+  const mp=periods.find(p=>p.mode==='month'),ym=mp?mp.ym:anLastYM();
+  if(!AN_GEN_M[ym])return chatMonthLabel(ym)+' 데이터가 없어요.';
+  const fl=anFacs(facs),ms=metrics.length?metrics:['gen','hours','ratio','usage'];
+  let h='<b>↕ '+chatMonthLabel(ym)+' 전월 · 전년 동월 대비 증감</b>';
+  if(!anComplete(ym))h+='<br><span class="an-note">* 진행 중인 달('+AN_GEN_M[ym].days+'일) — 발전량은 일평균 기준으로 비교</span>';
+  ms.forEach(m=>{
+    h+='<h4>'+anMetricName(m)+' ('+anUnit(m)+')</h4><table class="an-tbl"><tr><th>구분</th><th>당월</th><th>전월</th><th>전월비</th><th>전년 동월</th><th>전년비</th></tr>';
+    fl.forEach(f=>{
+      h+='<tr><td>'+chatFactoryLabel(f)+'</td><td><b>'+anCell(m,anMonthVal(ym,f,m))+'</b></td><td>'+anCell(m,anMonthVal(anAddM(ym,-1),f,m))+'</td><td>'+anChgHtml(m,anChg(m,ym,anAddM(ym,-1),f))+'</td><td>'+anCell(m,anMonthVal(anAddM(ym,-12),f,m))+'</td><td>'+anChgHtml(m,anChg(m,ym,anAddM(ym,-12),f))+'</td></tr>';
+    });
+    h+='</table>';
+  });
+  const notes=[];
+  fl.forEach(f=>{
+    const yt=anYtd(ym,f);
+    notes.push(chatFactoryLabel(f)+' 연간 누적('+yt.label+'): <b>'+chatFmt(yt.cv/1000,1)+'MWh</b>'+(yt.pct!=null?' · 전년 동기 '+chatFmt(yt.pv/1000,1)+'MWh 대비 '+anPctHtml(yt.pct):' <span class="an-note">(전년 동기 데이터 부족)</span>'));
+  });
+  const rk=anSameMonthRank(ym,'all');
+  if(rk&&rk.n>1)notes.push((+ym.slice(5))+'월 발전량 기준 데이터가 있는 '+rk.n+'개 연도 중 <b>'+rk.rank+'위</b>');
+  const y1=anChg('gen',ym,anAddM(ym,-12),'1'),y2=anChg('gen',ym,anAddM(ym,-12),'2');
+  if(y1!=null&&y2!=null){
+    if(Math.abs(y1-y2)>=AN_GAP_FLAG)notes.push('⚠ 두 공장의 전년비 차이가 '+chatFmt(Math.abs(y1-y2),1)+'%p로 커요 → 날씨보다 <b>설비 요인</b> 가능성. "이상 징후 점검해줘"로 자세히 확인해보세요.');
+    else notes.push('두 공장 전년비가 비슷하게 움직였어요('+chatFmt(y1,1)+'% / '+chatFmt(y2,1)+'%) → 증감은 주로 <b>일사량(기상)</b> 영향으로 보여요.');
+  }
+  return h+'<div class="an-box">'+notes.map(n=>'· '+n).join('<br>')+'</div>';
+}
+
+// ③ 추세 분석
+function anTrendReport(text,periods,facs,metrics){
+  const m=metrics[0]||'gen',f=facs.length===1?facs[0]:'all';
+  const sc=periods.length?anScope(periods,12):{from:RAW.daily[0].date,to:anLastDate(),label:'전체 기간'};
+  if(!sc)return'해당 기간 데이터가 없어요.';
+  const months=anMonthsIn(sc).filter(anComplete);
+  if(months.length<3)return'추세를 보려면 완전한 달이 3개월 이상 필요해요.';
+  const vals=months.map(x=>anMonthVal(x,f,m));
+  let h='<b>📈 '+chatFactoryLabel(f)+' '+anMetricName(m)+' 추세 분석</b><br><span class="an-note">'+sc.label+' · 완전한 달 '+months.length+'개월 기준</span>';
+  // 최근 6개월 전년 동월 대비
+  const rec=months.slice(-6).map(x=>({m:x,v:anMonthVal(x,f,m),pv:anMonthVal(anAddM(x,-12),f,m),c:anChg(m,x,anAddM(x,-12),f)}));
+  h+='<h4>최근 6개월 전년 동월 대비 ('+anUnit(m)+')</h4><table class="an-tbl"><tr><th>월</th><th>올해</th><th>전년</th><th>전년비</th></tr>'
+    +rec.map(r=>'<tr><td>'+anShortYM(r.m)+'</td><td>'+anCell(m,r.v)+'</td><td>'+anCell(m,r.pv)+'</td><td>'+anChgHtml(m,r.c)+'</td></tr>').join('')+'</table>';
+  const cs=rec.map(r=>r.c).filter(v=>v!=null),avgC=anMean(cs);
+  const ops=[];
+  if(avgC!=null){
+    const up=cs.filter(v=>v>0).length;
+    const dir=avgC>3?'증가 추세':avgC<-3?'감소 추세':'보합(큰 변화 없음)';
+    ops.push('최근 '+cs.length+'개월 전년비 평균 <b>'+(avgC>=0?'+':'')+chatFmt(avgC,1)+(m==='ratio'?'%p':'%')+'</b> → <b>'+dir+'</b> (증가 '+up+'개월 / 감소 '+(cs.length-up)+'개월)');
+  }
+  // 12개월 이동합계(계절성 제거)
+  if(months.length>=13){
+    const agg=a=>m==='gen'||m==='usage'?a.reduce((p,q)=>p+q,0):anMean(a);
+    const r1=agg(vals.slice(-24,-12).length===12?vals.slice(-24,-12):vals.slice(0,12)),r2=agg(vals.slice(-12));
+    const lbl1=vals.slice(-24,-12).length===12?anShortYM(months[months.length-24])+'~'+anShortYM(months[months.length-13]):anShortYM(months[0])+'~'+anShortYM(months[11]);
+    ops.push('직전 12개월('+anShortYM(months[months.length-12])+'~'+anShortYM(months[months.length-1])+') '+(m==='gen'||m==='usage'?'합계':'평균')+' <b>'+anCell(m,r2)+anUnit(m)+'</b> vs 그 이전 12개월('+lbl1+') '+anCell(m,r1)+anUnit(m)+' → '+anChgHtml(m,m==='ratio'?r2-r1:anPct(r2,r1)));
+  }
+  const iMax=vals.indexOf(Math.max(...vals)),iMin=vals.indexOf(Math.min(...vals));
+  ops.push('최고: '+chatMonthLabel(months[iMax])+' '+anCell(m,vals[iMax])+anUnit(m)+' · 최저: '+chatMonthLabel(months[iMin])+' '+anCell(m,vals[iMin])+anUnit(m));
+  if(m==='gen'||m==='hours'){const rel=anRelSummary();if(rel&&Math.abs(rel.chg)>=3)ops.push('참고: 1공장÷2공장 발전시간 비율이 초기 대비 '+anPctHtml(rel.chg)+' — 공장 간 성능 차이가 벌어지고 있어요.');}
+  h+='<div class="an-box">'+ops.map(o=>'· '+o).join('<br>')+'</div>';
+  // 연도별 겹쳐 보기
+  const years=[...new Set(months.map(x=>x.slice(0,4)))],colors=['#475569','#64748b','#94a3b8','#38bdf8','#2dd4bf'].slice(-years.length);
+  h+=anChart(years.map((y,i)=>{const ym=months.filter(x=>x.slice(0,4)===y);return{x:ym.map(x=>(+x.slice(5))+'월'),y:ym.map(x=>{const v=anMonthVal(x,f,m);return m==='gen'||m==='usage'?v/1000:v;}),type:'scatter',mode:'lines+markers',name:y+'년',line:{color:colors[i]||'#38bdf8',width:i===years.length-1?2.5:1.5},marker:{size:4},hovertemplate:y+'년 %{x}: %{y:,.1f}'+anUnit(m)+'<extra></extra>'};}),
+    {xaxis:{type:'category',categoryorder:'array',categoryarray:[...Array(12)].map((_,i)=>(i+1)+'월')},yaxis:{title:{text:anUnit(m),font:{size:9}}}},180);
+  return h;
+}
+
+// ④ 순위 (최고/최저 날·주·달)
+function anRankReport(text,periods,facs,metrics){
+  const m=metrics[0]||'gen',fl=facs.length===2?facs:[facs[0]];
+  const asc=/최저|최소|적[게은었]|낮[은았게]|하위|워스트|나빴|나쁜|저조|안\s*좋/.test(text);
+  const t2=text.replace(CHAT_PERIOD_RE,' ');   // '이번달' 같은 기간 표현은 단위 판단에서 제외
+  const adj='(?:많은|적은|높은|낮은|좋은|나쁜|많이\\s*나온|적게\\s*나온)\\s*';
+  const unit=new RegExp('주간|주차|어느\\s*주|몇\\s*주|주\\s*단위|'+adj+'주(?![가-힣])').test(t2)?'week'
+    :new RegExp('달|월별|월간|어느\\s*월|몇\\s*월|'+adj+'월').test(t2)?'month':'day';
+  const nm=text.match(/(?:top|탑|상위|하위)\s*(\d+)|(\d+)\s*(?:개|위|순위)/i),n=Math.min(15,Math.max(1,nm?+(nm[1]||nm[2]):5));
+  const sc=periods.length?anScope(periods,12):{from:RAW.daily[0].date,to:anLastDate(),label:'전체 기간'};
+  if(!sc)return'해당 기간 데이터가 없어요.';
+  const unitKo={day:'날',week:'주',month:'달'}[unit];
+  let h='<b>🏆 '+anMetricName(m)+' '+(asc?'낮은':'높은')+' '+unitKo+' '+(asc?'하위':'상위')+' '+n+'</b><br><span class="an-note">'+sc.label+(unit==='month'?' · 진행 중인 달 제외':'')+'</span>';
+  fl.forEach(f=>{
+    let rows;
+    if(unit==='day')rows=anDailyRows(m,sc.from,sc.to).map(d=>({k:d.date+'('+anDow(d.date)+')',v:d[anDailyField(m)+f]}));
+    else if(unit==='month')rows=anMonthsIn(sc).filter(anComplete).map(x=>({k:chatMonthLabel(x),v:anMonthVal(x,f,m)}));
+    else{const arr=m==='usage'||m==='ratio'?RAW.weekly_usage:RAW.weekly_gen;rows=arr.filter(w=>w.week_start>=sc.from&&w.week_start<=sc.to).map(w=>({k:w.week_start+' 주',v:w[anDailyField(m)+f]}));}
+    rows=rows.filter(r=>r.v!=null&&!isNaN(r.v));
+    if(!rows.length){h+='<br>'+chatFactoryLabel(f)+': 데이터 없음';return;}
+    const avg=anMean(rows.map(r=>r.v));
+    const top=[...rows].sort((a,b)=>asc?a.v-b.v:b.v-a.v).slice(0,n);
+    const fmtV=v=>m==='gen'||m==='usage'?(unit==='day'?chatFmt(v,0)+'kWh':chatFmt(v/1000,1)+'MWh'):m==='hours'?chatFmt(v,2)+'h':chatFmt(v,1)+'%';
+    h+='<h4>'+chatFactoryLabel(f)+' <span class="an-note">(평균 '+fmtV(avg)+')</span></h4><table class="an-tbl"><tr><th>순위</th><th>기간</th><th>값</th><th>평균 대비</th></tr>'
+      +top.map((r,i)=>'<tr><td>'+(i+1)+'</td><td style="text-align:left">'+r.k+'</td><td>'+fmtV(r.v)+'</td><td>'+anPctHtml(anPct(r.v,avg))+'</td></tr>').join('')+'</table>';
+  });
+  return h;
+}
+
+// ⑤ 예측 (과거 동월 평균 × 최근 실적 보정계수)
+function anSameMonthBase(ym,fac){
+  const mm=ym.slice(5),a=RAW.monthly_gen.filter(r=>r.month.slice(5)===mm&&r.month<ym&&anComplete(r.month)).map(r=>r['kwh_'+fac]);
+  return a.length?anMean(a):null;
+}
+function anFactors(fac,k){
+  const done=RAW.monthly_gen.map(r=>r.month).filter(anComplete);
+  return done.slice(-k).map(m=>{const b=anSameMonthBase(m,fac);return b?anMonthVal(m,fac,'gen')/b:null;}).filter(v=>v!=null);
+}
+function anForecast(text,facs){
+  const last=anLastYM(),partial=!anComplete(last);
+  const target=partial&&!/다음\s*달|내달|익월/.test(text)?last:anAddM(last,1);
+  const fl=anFacs(facs);
+  let h='<b>🔮 '+chatMonthLabel(target)+' 발전량 예측</b><br><span class="an-note">방법: 과거 같은 달 평균 × 최근 3개월 실적/평년 비율 (범위는 최근 6개월 비율의 최소~최대)</span>';
+  h+='<table class="an-tbl"><tr><th>구분</th><th>예상(MWh)</th><th>범위</th><th>전년 동월</th></tr>';
+  const est={};
+  fl.forEach(f=>{
+    const base=anSameMonthBase(target,f),fs=anFactors(f,3),fs6=anFactors(f,6);
+    if(!base||!fs.length){h+='<tr><td>'+chatFactoryLabel(f)+'</td><td colspan="3">과거 동월 데이터 부족</td></tr>';return;}
+    const k=anMedian(fs),lo=Math.min(...fs6),hi=Math.max(...fs6);
+    let e=base*k,eLo=base*lo,eHi=base*hi;
+    if(target===last&&partial){   // 진행 중인 달: 실적 + 남은 일수 추정
+      const r=AN_GEN_M[last],rem=anDaysIn(last)-r.days,per=base/anDaysIn(last);
+      e=r['kwh_'+f]+rem*per*k;eLo=r['kwh_'+f]+rem*per*lo;eHi=r['kwh_'+f]+rem*per*hi;
+    }
+    est[f]={e,k};
+    h+='<tr><td>'+chatFactoryLabel(f)+'</td><td><b>'+chatFmt(e/1000,1)+'</b></td><td>'+chatFmt(eLo/1000,1)+'~'+chatFmt(eHi/1000,1)+'</td><td>'+anCell('gen',anMonthVal(anAddM(target,-12),f,'gen'))+'</td></tr>';
+  });
+  h+='</table>';
+  const f0=fl[0];
+  if(est[f0]){
+    const notes=['최근 3개월 실적은 평년(과거 같은 달 평균)의 <b>'+chatFmt(est[f0].k*100,0)+'%</b> 수준이에요.'];
+    // 연말 누적 전망
+    {
+      const y=target.slice(0,4);let ytd=0,rest=0,ok=true;
+      RAW.monthly_gen.filter(r=>r.month.slice(0,4)===y&&r.month<target).forEach(r=>{ytd+=r['kwh_'+f0];});
+      for(let mm=target;mm.slice(0,4)===y;mm=anAddM(mm,1)){
+        if(mm===target){rest+=est[f0].e;continue;}
+        const b=anSameMonthBase(mm,f0);if(!b){ok=false;break;}rest+=b*est[f0].k;
+      }
+      const py=String(+y-1),pyTot=RAW.monthly_gen.filter(r=>r.month.slice(0,4)===py).reduce((s,r)=>s+r['kwh_'+f0],0),pyFull=RAW.monthly_gen.filter(r=>r.month.slice(0,4)===py&&anComplete(r.month)).length===12;
+      if(ok)notes.push(chatFactoryLabel(f0)+' '+y+'년 연간 예상 <b>'+chatFmt((ytd+rest)/1000,1)+'MWh</b> (실적 '+chatFmt(ytd/1000,1)+' + 남은 기간 예상 '+chatFmt(rest/1000,1)+')'+(pyFull?' · 전년 '+chatFmt(pyTot/1000,1)+'MWh 대비 '+anPctHtml(anPct(ytd+rest,pyTot)):''));
+    }
+    notes.push('<span class="an-note">날씨에 따라 실제 값은 범위를 벗어날 수 있어요. 참고용 추정치예요.</span>');
+    h+='<div class="an-box">'+notes.map(n=>'· '+n).join('<br>')+'</div>';
+  }
+  return h;
+}
+
+// ⑥ 목표(발전시간 3.5h) 달성 현황
+function anTargetReport(text,periods,facs){
+  const sc=periods.length?anScope(periods,12):{from:anLastYM().slice(0,4)+'-01-01',to:anLastDate(),label:anLastYM().slice(0,4)+'년'};
+  if(!sc)return'해당 기간 데이터가 없어요.';
+  const fl=anFacs(facs),dd=RAW.daily.filter(d=>d.date>=sc.from&&d.date<=sc.to);
+  if(!dd.length)return sc.label+' 데이터가 없어요.';
+  let h='<b>🎯 발전시간 목표 '+AN_TARGET_H+'h 달성 현황</b><br><span class="an-note">'+sc.label+' ('+dd.length+'일)</span>';
+  h+='<table class="an-tbl"><tr><th>구분</th><th>평균</th><th>달성일</th><th>달성률</th><th>목표 대비</th></tr>';
+  fl.forEach(f=>{const a=anMean(dd.map(d=>d['hrs_'+f])),n=dd.filter(d=>d['hrs_'+f]>=AN_TARGET_H).length;
+    h+='<tr><td>'+chatFactoryLabel(f)+'</td><td>'+a.toFixed(2)+'h</td><td>'+n+'/'+dd.length+'</td><td>'+chatFmt(n/dd.length*100,1)+'%</td><td>'+anPctHtml(anPct(a,AN_TARGET_H))+'</td></tr>';});
+  h+='</table>';
+  const months=anMonthsIn(sc);
+  if(months.length>1){
+    h+='<h4>월별 평균 발전시간</h4><table class="an-tbl"><tr><th>월</th>'+fl.map(f=>'<th>'+chatFactoryLabel(f)+'</th>').join('')+'</tr>'
+      +months.map(m=>'<tr><td>'+anShortYM(m)+'</td>'+fl.map(f=>{const v=anMonthVal(m,f,'hours');return'<td'+(v>=AN_TARGET_H?' class="an-up"':' class="an-dn"')+'>'+v.toFixed(2)+(v>=AN_TARGET_H?' ✓':'')+'</td>';}).join('')+'</tr>').join('')+'</table>';
+    const ok=months.filter(m=>anMonthVal(m,'all','hours')>=AN_TARGET_H);
+    h+='<div class="an-box">· 전체 기준 목표 달성 월: <b>'+ok.length+'/'+months.length+'개월</b>'+(ok.length?' ('+ok.map(anShortYM).join(', ')+')':'')+'<br>· 일사량이 적은 늦가을~겨울은 구조적으로 목표 미달이 많아요. 계절 영향을 빼고 보려면 "전년 대비 증감"을 확인해보세요.</div>';
+  }
+  return h;
+}
+
+// ⑦ 기초 통계 (일별 분포)
+function anStatsReport(text,periods,facs,metrics){
+  const m=metrics[0]||'gen',fl=anFacs(facs),sc=anScope(periods,1);
+  if(!sc)return'해당 기간 데이터가 없어요.';
+  const rows=anDailyRows(m,sc.from,sc.to);
+  if(!rows.length)return sc.label+' 데이터가 없어요.';
+  const fv=v=>m==='gen'||m==='usage'?chatFmt(v,0):m==='hours'?chatFmt(v,2):chatFmt(v,1);
+  let h='<b>📊 '+sc.label+' 일별 '+anMetricName(m)+' 통계</b> <span class="an-note">('+rows.length+'일, 단위 '+(m==='gen'||m==='usage'?'kWh':anUnit(m))+')</span>';
+  h+='<table class="an-tbl"><tr><th>구분</th><th>평균</th><th>중앙값</th><th>표준편차</th><th>변동계수</th><th>최대</th><th>최소</th></tr>';
+  fl.forEach(f=>{
+    const a=rows.map(d=>({date:d.date,v:d[anDailyField(m)+f]})),vs=a.map(x=>x.v),mean=anMean(vs),sd=anStd(vs);
+    const mx=a.reduce((p,q)=>q.v>p.v?q:p),mn=a.reduce((p,q)=>q.v<p.v?q:p);
+    h+='<tr><td>'+chatFactoryLabel(f)+'</td><td>'+fv(mean)+'</td><td>'+fv(anMedian(vs))+'</td><td>'+fv(sd)+'</td><td>'+chatFmt(mean?sd/mean*100:0,0)+'%</td><td>'+fv(mx.v)+'<br><span class="an-note">'+anMD(mx.date)+'</span></td><td>'+fv(mn.v)+'<br><span class="an-note">'+anMD(mn.date)+'</span></td></tr>';
+  });
+  h+='</table><span class="an-note">변동계수(표준편차÷평균)가 클수록 날마다 들쭉날쭉하다는 뜻이에요.</span>';
+  const f=fl[0],vs=rows.map(d=>d[anDailyField(m)+f]);
+  h+=anChart([{x:vs.map(v=>m==='gen'||m==='usage'?v/1000:v),type:'histogram',nbinsx:15,name:chatFactoryLabel(f),marker:{color:'#2dd4bf',line:{color:'#0f172a',width:1}},hovertemplate:'%{x}: %{y}일<extra></extra>'}],
+    {showlegend:false,xaxis:{title:{text:(m==='gen'||m==='usage'?'MWh':anUnit(m))+' ('+chatFactoryLabel(f)+')',font:{size:9}}},yaxis:{title:{text:'일수',font:{size:9}}},bargap:0.05},160);
+  return h;
+}
+
+// ⑧ 요일별 패턴 (사용량·사용비율)
+function anWeekdayReport(text,periods,facs){
+  const f=facs.length===1?facs[0]:'all',sc=anScope(periods,3);
+  if(!sc)return'해당 기간 데이터가 없어요.';
+  const rows=RAW.usage.filter(d=>d.date>=sc.from&&d.date<=sc.to);
+  if(!rows.length)return sc.label+' 데이터가 없어요.';
+  const by=[...Array(7)].map(()=>({u:[],s:[]}));
+  rows.forEach(d=>{const w=new Date(d.date+'T00:00:00').getDay();by[w].u.push(d['usage_'+f]);by[w].s.push(d['solar_'+f]);});
+  const order=[1,2,3,4,5,6,0];
+  let h='<b>📅 '+chatFactoryLabel(f)+' 요일별 패턴</b><br><span class="an-note">'+sc.label+' ('+rows.length+'일)</span><table class="an-tbl"><tr><th>요일</th><th>평균 사용량(MWh)</th><th>평균 발전량(MWh)</th><th>사용비율</th></tr>';
+  order.forEach(w=>{const b=by[w];if(!b.u.length)return;const su=b.u.reduce((p,q)=>p+q,0),ss=b.s.reduce((p,q)=>p+q,0);
+    h+='<tr><td>'+'일월화수목금토'[w]+'</td><td>'+chatFmt(su/b.u.length/1000,1)+'</td><td>'+chatFmt(ss/b.s.length/1000,1)+'</td><td>'+chatFmt(su?ss/su*100:0,1)+'%</td></tr>';});
+  const wk=[1,2,3,4,5].flatMap(w=>by[w].u),we=[0,6].flatMap(w=>by[w].u);
+  h+='</table>';
+  if(wk.length&&we.length)h+='<div class="an-box">· 주말 평균 사용량은 평일의 <b>'+chatFmt(anMean(we)/anMean(wk)*100,0)+'%</b> 수준이에요. 발전량은 요일과 무관하므로 사용량이 적은 주말에 사용비율이 높아져요.</div>';
+  return h;
+}
+
+// ⑨ 월간 종합 분석
+function anSummaryReport(text,periods,facs){
+  const mp=periods.find(p=>p.mode==='month'),ym=mp?mp.ym:anLastYM(),g=AN_GEN_M[ym];
+  if(!g)return chatMonthLabel(ym)+' 데이터가 없어요.';
+  const partial=!anComplete(ym),pm=anAddM(ym,-1),py=anAddM(ym,-12);
+  let h='<b>📋 '+chatMonthLabel(ym)+' 태양광 종합 분석</b>'+(partial?' <span class="an-note">(진행 중, '+g.days+'일 · 발전량 증감은 일평균 기준)</span>':'');
+  h+='<h4>① 핵심 지표</h4><table class="an-tbl"><tr><th>구분</th><th>발전량(MWh)</th><th>전월비</th><th>전년비</th><th>발전시간</th><th>사용비율</th></tr>';
+  ['all','1','2'].forEach(f=>{
+    h+='<tr><td>'+chatFactoryLabel(f)+'</td><td><b>'+anCell('gen',anMonthVal(ym,f,'gen'))+'</b></td><td>'+anChgHtml('gen',anChg('gen',ym,pm,f))+'</td><td>'+anChgHtml('gen',anChg('gen',ym,py,f))+'</td><td>'+anCell('hours',anMonthVal(ym,f,'hours'))+'h</td><td>'+anCell('ratio',anMonthVal(ym,f,'ratio'))+'%</td></tr>';
+  });
+  h+='</table>';
+  const yt=anYtd(ym,'all');
+  h+='<span class="an-note">연간 누적('+yt.label+') '+chatFmt(yt.cv/1000,1)+'MWh'+(yt.pct!=null?' · 전년 동기 대비 ':'')+'</span>'+(yt.pct!=null?anPctHtml(yt.pct):'');
+  const dd=RAW.daily.filter(d=>d.date.slice(0,7)===ym),sc=anDailyScan(ym+'-01',ym+'-31');
+  const best=dd.reduce((p,q)=>q.kwh_all>p.kwh_all?q:p),worst=dd.reduce((p,q)=>q.kwh_all<p.kwh_all?q:p);
+  const tgt=dd.filter(d=>d.hrs_all>=AN_TARGET_H).length;
+  h+='<h4>② 일별 특징</h4>· 최고 '+anMD(best.date)+'('+anDow(best.date)+') '+chatFmt(best.kwh_all,0)+'kWh · 최저 '+anMD(worst.date)+'('+anDow(worst.date)+') '+chatFmt(worst.kwh_all,0)+'kWh'
+    +'<br>· 목표 '+AN_TARGET_H+'h 달성일 <b>'+tgt+'/'+dd.length+'일</b> ('+chatFmt(tgt/dd.length*100,0)+'%)'
+    +'<br>· 기상 영향 저조일 '+sc.weather.length+'일'+(()=>{const L=anStreaks(sc.weather.map(w=>w.date)).filter(s=>s.n>=2);return L.length?' (연속: '+L.map(s=>anMD(s.from)+'~'+anMD(s.to)).join(', ')+')':'';})()
+    +' · 설비 의심일 '+(sc.equip.length?anTag(sc.equip.length+'일','warn'):anTag('없음','ok'))+(sc.stop.length?' · 발전 0: '+sc.stop.map(s=>anMD(s.date)+' '+chatFactoryLabel(s.fac)).join(', '):'');
+  const pAvg=anMonthVal(py,'all','genAvg'),avg=anMean(dd.map(d=>d.kwh_all));
+  h+=anChart([
+    {x:dd.map(d=>d.date),y:dd.map(d=>d.kwh_all),type:'bar',name:'일 발전량',marker:{color:dd.map(d=>sc.equip.some(e=>e.date===d.date)||sc.stop.some(s=>s.date===d.date)?'#f87171':sc.weather.some(w=>w.date===d.date)?'#64748b':'#2dd4bf')},hovertemplate:'%{x}: %{y:,.0f}kWh<extra></extra>'},
+    {x:[dd[0].date,dd[dd.length-1].date],y:[avg,avg],type:'scatter',mode:'lines',name:'당월 평균',line:{color:'#2dd4bf',width:1.5,dash:'dot'},hoverinfo:'skip'}
+  ].concat(pAvg?[{x:[dd[0].date,dd[dd.length-1].date],y:[pAvg,pAvg],type:'scatter',mode:'lines',name:'전년 동월 평균',line:{color:'#fbbf24',width:1.5,dash:'dash'},hoverinfo:'skip'}]:[]),
+    {xaxis:{type:'date'},yaxis:{title:{text:'kWh',font:{size:9}}},bargap:0.15},170);
+  h+='<span class="an-note">회색 막대: 기상 영향 저조일 · 빨간 막대: 설비 의심/정지</span>';
+  // 인사이트
+  const ops=[],y1=anChg('gen',ym,py,'1'),y2=anChg('gen',ym,py,'2'),ya=anChg('gen',ym,py,'all');
+  if(ya!=null){
+    if(y1!=null&&y2!=null&&Math.abs(y1-y2)>=AN_GAP_FLAG)ops.push('전년 동월 대비 1공장 '+anPctHtml(y1)+', 2공장 '+anPctHtml(y2)+' — 공장 간 차이가 커서 <b>설비 요인 점검</b>이 필요해요.');
+    else ops.push('전년 동월 대비 '+anPctHtml(ya)+' — 두 공장이 비슷하게 움직여 <b>일사량(기상) 영향</b>으로 보여요.');
+  }
+  const rk=anSameMonthRank(ym,'all');if(rk&&rk.n>1)ops.push((+ym.slice(5))+'월 기준 '+rk.n+'개 연도 중 '+rk.rank+'위');
+  const rel=anRelSummary();if(rel)ops.push('공장 간 상대효율(1공장÷2공장) '+rel.recent.toFixed(3)+' — 초기 '+rel.base.toFixed(3)+' 대비 '+anPctHtml(rel.chg)+(Math.abs(rel.chg)>=3?' '+anTag(rel.chg<0?'1공장 점검 권장':'2공장 점검 권장','warn'):' '+anTag('정상','ok')));
+  const rU=anChg('usage',ym,py,'all');if(rU!=null)ops.push('전력사용량 전년비 '+anPctHtml(rU)+', 사용비율 '+anChgHtml('ratio',anChg('ratio',ym,py,'all')));
+  h+='<h4>③ 핵심 인사이트</h4><div class="an-box">'+ops.map(o=>'· '+o).join('<br>')+'</div><span class="an-note">더 보기: "이상 징후 점검해줘", "추세 분석해줘", "다음달 예측해줘"</span>';
+  return h;
+}
+
 function chatAnswer(text){
   if(!RAW.daily.length)return'데이터가 없습니다.';
   if(/도움말|help|예시/i.test(text))return'이렇게 물어보세요:<br>'+CHAT_EXAMPLES.map(e=>'· '+e).join('<br>');
@@ -486,6 +972,21 @@ function chatAnswer(text){
     if(chatLastCtx.facs.length===2&&chatLastCtx.periods.length===1)return chatWhyFactoryAnswer();
     if(chatLastCtx.periods.length===2&&chatLastCtx.facs.length===1)return chatWhyPeriodAnswer();
     return'지금은 "공장 두 곳 비교" 또는 "기간 두 곳 비교" 뒤에만 "왜" 질문에 답할 수 있어요. 예: "1공장이랑 2공장 비교해줘" 다음에 "왜 차이나?"처럼요.';
+  }
+
+  // ── 분석형 질문 라우팅 (구체적인 의도부터 우선 판단) ──
+  {
+    const P=chatFindAllPeriods(text),F=chatDetectFactories(text),M=chatDetectMetrics(text);
+    const monthPs=P.filter(p=>p.mode==='month');
+    if(/예측|예상|전망|추정|될까|나올까|얼마나\s*나올/.test(text))return anForecast(text,F);
+    if(/목표|3\.5\s*h?|달성/.test(text))return anTargetReport(text,P,F);
+    if(/이슈|이상\s*(징후|여부|유무|감지|점검|있|없|한)|특이|급감|급증|급격|문제|점검|진단|비정상|고장|저하|특별|원인|이유|(감소|증가|하락|상승|떨어|늘).{0,20}(검토|확인|있는지|있어|있나|봐)/.test(text))return anIssueReport(text,P);
+    if(/가장|제일|최고|최대|최저|최소|순위|랭킹|top\s*\d*|탑\s*\d|베스트|워스트|상위|하위/i.test(text))return anRankReport(text,P,F,M);
+    if(/전년|작년\s*(같은|동월|대비|보다)|전월|지난\s*달\s*(대비|보다)|증감|yoy|mom|대비/i.test(text)&&!/추세|트렌드|추이/.test(text)&&monthPs.length<=1&&P.length<=1)return anChangeReport(text,P,F,M);
+    if(/요일|주말|평일/.test(text))return anWeekdayReport(text,P,F);
+    if(/추세|트렌드|경향|흐름|추이|패턴|변화/.test(text))return anTrendReport(text,P,F,M);
+    if(/통계|분포|표준\s*편차|편차|변동|중앙값|산포|들쭉/.test(text))return anStatsReport(text,P,F,M);
+    if(/분석|리포트|보고서|인사이트|브리핑|종합|요약\s*해|현황|어땠|어때/.test(text)&&P.length<=1&&!/비교/.test(text))return anSummaryReport(text,P,F);
   }
 
   // 이 챗봇은 이전 대화 맥락(예: "이게 뭐야?"의 "이게")을 기억하지 않으므로,
@@ -530,6 +1031,15 @@ function chatAnswer(text){
       return'· <b>'+period.label+'</b><br>'+rows.join('<br>');
     });
     let out='<b>기간별 비교</b><br>'+blocks.join('<br>');
+    // 기간 2개 · 공장 1개면 증감률도 바로 계산해서 붙인다
+    if(periods.length===2&&facs.length===1){
+      const a=chatStats(periods[0],facs[0]),b=chatStats(periods[1],facs[0]);
+      if(a.days&&b.days){
+        const pick={gen:s=>s.kwh,hours:s=>s.hrs,usage:s=>s.usage,ratio:s=>s.ratio};
+        out+='<div class="an-box"><b>'+periods[1].label+' vs '+periods[0].label+'</b><br>'+metrics.map(m=>{const v1=pick[m](a),v2=pick[m](b);return'· '+anMetricName(m)+' '+anChgHtml(m,m==='ratio'?v2-v1:anPct(v2,v1));}).join('<br>')
+          +(a.days!==b.days?'<br><span class="an-note">일수가 다름('+a.days+'일 vs '+b.days+'일) — 발전량·사용량은 합계 기준</span>':'')+'</div>';
+      }
+    }
     // 같은 메시지에 "특정월에 차이가 있어?" 같은 요청이 함께 있으면 월별 비교도 바로 붙여준다
     if(periods.length===2&&facs.length===1&&/특정\s*월|어느\s*달|몇\s*월|월별로|월별\s*차이/.test(text)){
       const mbm=chatMonthByMonthCompare(periods[0],periods[1],facs[0],metrics[0]);
@@ -571,14 +1081,29 @@ function chatSend(){
   if(!text)return;
   chatAppend('user',text.replace(/</g,'&lt;'));
   input.value='';
-  setTimeout(()=>{chatAppend('bot',chatAnswer(text));},200);
+  setTimeout(()=>{
+    anPendingCharts=[];
+    let html;
+    try{html=chatAnswer(text);}catch(e){console.error(e);anPendingCharts=[];html='분석 중 오류가 발생했어요. 질문을 조금 바꿔서 다시 시도해 주세요.';}
+    chatAppend('bot',html);
+    anRenderCharts();
+  },200);
+}
+function chatAsk(q){document.getElementById('chatInput').value=q;chatSend();}
+function chatWide(){
+  document.getElementById('chatPanel').classList.toggle('chat-wide');
+  document.querySelectorAll('#chatMessages .chat-chart').forEach(el=>{try{Plotly.Plots.resize(el);}catch(e){}});
 }
 function chatToggle(){
   const panel=document.getElementById('chatPanel');
   const opening=panel.style.display==='none'||!panel.style.display;
   panel.style.display=opening?'flex':'none';
   if(opening&&!panel.dataset.greeted){
-    chatAppend('bot','안녕하세요! 태양광 발전 데이터에 대해 물어보세요.<br><br>예시:<br>'+CHAT_EXAMPLES.map(e=>'· '+e).join('<br>'));
+    document.getElementById('chatChips').innerHTML=CHAT_CHIPS.map(c=>'<button class="chat-chip" data-q="'+c[1]+'">'+c[0]+'</button>').join('');
+    document.querySelectorAll('#chatChips .chat-chip').forEach(b=>b.addEventListener('click',()=>chatAsk(b.dataset.q)));
+    chatAppend('bot','안녕하세요! 태양광 발전 데이터를 <b>조회·분석</b>해 드려요.<br>아래 버튼을 누르거나 직접 물어보세요.<br><br>'
+      +'<b>분석 기능</b><br>· 🔍 이상 징후 점검 — 설비 의심일 / 기상 영향 / 공장 간 효율 변화<br>· 📋 월간 종합 분석 · 📈 추세 · ↕ 전월/전년 대비<br>· 🏆 순위(최고/최저 날·주·달) · 🔮 예측 · 🎯 목표 달성 · 📊 통계 · 📅 요일 패턴'
+      +'<br><br>예시:<br>'+CHAT_EXAMPLES.map(e=>'· '+e).join('<br>'));
     panel.dataset.greeted='1';
   }
 }
