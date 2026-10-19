@@ -331,9 +331,9 @@ setGran('monthly',document.getElementById('gM'));
 window.addEventListener('resize',()=>{['chart1','chart2','chart3','chart4'].forEach(id=>{try{Plotly.relayout(id,{});}catch(e){}});});
 
 // ── 챗봇 (내장 데이터 기반 규칙형 Q&A + 분석 엔진, 외부 API 호출 없음) ──────────────────
-const CHAT_EXAMPLES=['이번달 종합 분석해줘','1,2공장 발전량 이상 징후 점검해줘','발전량 추세 분석해줘','9월 전년 대비 증감','발전량 가장 많은 날 Top 5','다음달 발전량 예측','올해 목표 3.5h 달성률','1공장 8월 발전시간','25년 상반기와 26년 상반기 비교'];
+const CHAT_EXAMPLES=['26년4월~9월까지 월별 RE100 실적 알려줘','이번달 종합 분석해줘','1,2공장 발전량 이상 징후 점검해줘','발전량 추세 분석해줘','9월 전년 대비 증감','발전량 가장 많은 날 Top 5','다음달 발전량 예측','올해 목표 3.5h 달성률','1공장 8월 발전시간','25년 상반기와 26년 상반기 비교'];
 // 입력창 위 빠른 질문 버튼 (표시 문구, 실제 질문)
-const CHAT_CHIPS=[['📋 종합 분석','이번달 종합 분석해줘'],['🔍 이상 징후','1,2공장 발전량 이상 징후 점검해줘'],['📈 추세','발전량 추세 분석해줘'],['↕ 전년 대비','전년 대비 증감 알려줘'],['🏆 Top 5','발전량 가장 많은 날 Top 5'],['🔮 예측','다음달 발전량 예측해줘'],['🎯 목표 달성','올해 목표 3.5h 달성률']];
+const CHAT_CHIPS=[['📋 종합 분석','이번달 종합 분석해줘'],['🔍 이상 징후','1,2공장 발전량 이상 징후 점검해줘'],['📈 추세','발전량 추세 분석해줘'],['↕ 전년 대비','전년 대비 증감 알려줘'],['🏆 Top 5','발전량 가장 많은 날 Top 5'],['🔮 예측','다음달 발전량 예측해줘'],['🎯 목표 달성','올해 목표 3.5h 달성률'],['♻ RE100','올해 월별 RE100 실적']];
 function chatMonthLabel(ym){const[y,m]=ym.split('-');return y+'년 '+(+m)+'월';}
 function chatPrevMonth(ym){let[y,m]=ym.split('-').map(Number);m--;if(m===0){m=12;y--;}return y+'-'+String(m).padStart(2,'0');}
 function chatYearFull(y){const n=+y;return n<100?2000+n:n;}
@@ -343,9 +343,10 @@ function chatYearFull(y){const n=+y;return n<100?2000+n:n;}
 const CHAT_PERIOD_RE=/(?<fy>\d{2,4})\s*년\s*(?<fm>\d{1,2})\s*월\s*[~\-]\s*(?<ty>\d{2,4})\s*년\s*(?<tm>\d{1,2})\s*월|(?<ry>\d{2,4})\s*년\s*(?<rm1>\d{1,2})\s*[~\-]\s*(?<rm2>\d{1,2})\s*월|(?<my>\d{2,4})\s*년\s*(?<mm>\d{1,2})\s*월|(?<hy>\d{2,4})\s*년\s*(?<half>상|하)\s*반기|(?<qy>\d{2,4})\s*년\s*(?<q>[1-4])\s*분기|(?<yo>\d{2,4})\s*년(?!\s*\d)|(?<half2>상|하)\s*반기|(?<q2>[1-4])\s*분기|(?<recY>최근\s*\d+\s*년)|(?<r2m1>\d{1,2})\s*[~\-]\s*(?<r2m2>\d{1,2})\s*월|(?<smm>\d{1,2})\s*월(?!평균|간)|(?<thisM>이번\s*달|이달|당월)|(?<lastM>지난\s*달|저번\s*달|전달)|(?<thisY>올해|금년)|(?<lastY>작년)|(?<today>오늘)|(?<yest>어제)|(?<recD>최근\s*\d+\s*일)|(?<recM>최근\s*\d+\s*개?월)/g;
 function chatFindAllPeriods(text){
   const lastYM=RAW.daily[RAW.daily.length-1].date.slice(0,7),lastYear=+lastYM.slice(0,4);
-  const out=[];
+  const out=[],pos=[];
   for(const m of text.matchAll(CHAT_PERIOD_RE)){
     const g=m.groups;
+    pos.push({start:m.index,end:m.index+m[0].length,explicitYear:g.my!==undefined||g.yo!==undefined});
     if(g.fy!==undefined){const y1=chatYearFull(g.fy),m1=+g.fm,y2=chatYearFull(g.ty),m2=+g.tm;out.push({mode:'yearMonthRange',y1,m1,y2,m2,label:y1+'년 '+m1+'월~'+y2+'년 '+m2+'월'});}
     else if(g.ry!==undefined){const y=chatYearFull(g.ry),m1=+g.rm1,m2=+g.rm2;out.push({mode:'monthRange',year:y,m1,m2,label:y+'년 '+m1+'~'+m2+'월'});}
     else if(g.my!==undefined){const y=chatYearFull(g.my),mo=+g.mm;const ym=y+'-'+String(mo).padStart(2,'0');out.push({mode:'month',ym,label:chatMonthLabel(ym)});}
@@ -364,7 +365,30 @@ function chatFindAllPeriods(text){
     else if(g.recD!==undefined){const n=+g.recD.match(/\d+/)[0];out.push({mode:'recentDays',n,label:'최근 '+n+'일'});}
     else if(g.recM!==undefined){const n=+g.recM.match(/\d+/)[0];out.push({mode:'recentMonths',n,label:'최근 '+n+'개월'});}
   }
-  return out;
+  return chatMergeRanges(text,out,pos,lastYM);
+}
+// "26년4월~9월", "25년 4월부터 26년 3월까지", "4월부터"처럼 물결·부터로 이어진 두 시점을 하나의 기간으로 합친다
+const CHAT_RANGE_JOIN=/^\s*(~|-|–|〜|부터|에서부터|에서)\s*$/;
+function chatMergeRanges(text,out,pos,lastYM){
+  const lastYear=+lastYM.slice(0,4),res=[];
+  const mk=(y1,m1,y2,m2)=>({mode:'yearMonthRange',y1,m1,y2,m2,label:y1===y2?y1+'년 '+m1+'~'+m2+'월':y1+'년 '+m1+'월~'+y2+'년 '+m2+'월'});
+  for(let i=0;i<out.length;i++){
+    const a=out[i],b=out[i+1];
+    if(b&&CHAT_RANGE_JOIN.test(text.slice(pos[i].end,pos[i+1].start))){
+      if(a.mode==='month'&&b.mode==='month'){
+        let y1=+a.ym.slice(0,4),m1=+a.ym.slice(5),y2=+b.ym.slice(0,4),m2=+b.ym.slice(5);
+        if(!pos[i+1].explicitYear)y2=pos[i].explicitYear?y1+(m2<m1?1:0):y2;
+        if(!pos[i].explicitYear&&!pos[i+1].explicitYear&&m2<m1)y1=y2-1;
+        res.push(mk(y1,m1,y2,m2));i++;continue;
+      }
+      if(a.mode==='year'&&b.mode==='year'){res.push(mk(a.year,1,b.year,12));i++;continue;}
+    }
+    if(!b&&a.mode==='month'&&/^\s*(부터|이후)/.test(text.slice(pos[i].end))&&a.ym<lastYM){
+      res.push(mk(+a.ym.slice(0,4),+a.ym.slice(5),lastYear,+lastYM.slice(5)));continue;
+    }
+    res.push(a);
+  }
+  return res;
 }
 // {from,to} 날짜 범위로 환산 ('day'/'all'은 별도 처리)
 function chatPeriodRange(period){
@@ -425,7 +449,7 @@ function chatDetectFactories(text){
 }
 function chatDetectMetrics(text){
   const out=[];
-  if(/사용\s*비율|비율/.test(text))out.push('ratio');
+  if(/사용\s*비율|비율|RE\s*100|재생\s*에너지|자급률|자립률|대체율|기여율|충당/i.test(text))out.push('ratio');
   if(/발전\s*시간|가동\s*시간/.test(text))out.push('hours');
   if(/발전\s*량/.test(text))out.push('gen');
   if(/사용량|전력\s*사용|전기\s*사용/.test(text))out.push('usage');
@@ -918,6 +942,64 @@ function anWeekdayReport(text,periods,facs){
   return h;
 }
 
+// ⑨-1 기간별 실적표 (월별 · 주별 · 일별) — "26년4월~9월 월별 RE100 실적"
+// RE100 달성률 = 태양광 발전량 ÷ 전력사용량 (자가 태양광 기준 = 대시보드의 '태양광 사용비율')
+function anBreakdownUnit(text){
+  if(/일별|매일|날짜별|하루\s*하루|일자별|일\s*단위/.test(text))return'day';
+  if(/주별|주간별|주차별|매주|주\s*단위/.test(text))return'week';
+  return'month';
+}
+function anBreakdownReport(text,periods,facs,metrics){
+  const unit=anBreakdownUnit(text),re=/RE\s*100|재생\s*에너지|자급률|자립률/i.test(text);
+  const ms=re?['gen','usage','ratio']:(metrics.length?metrics:['gen','usage','ratio','hours']);
+  const sc=periods.length?anScope(periods,12):anScope([],unit==='day'?1:unit==='week'?3:12);
+  if(!sc)return'해당 기간 데이터가 없어요.';
+  const single=unit==='month'&&periods.length===1&&periods[0].mode==='month';   // 한 달만 물으면 공장별로 펼쳐 보여줌
+  const fl=facs[0]==='all'?(single?['all','1','2']:['all']):facs,unitKo={day:'일',week:'주',month:'월'}[unit];
+  const mName=m=>m==='ratio'&&re?'RE100':anMetricName(m).replace('태양광 ','');
+  const mUnit=m=>(m==='gen'||m==='usage')&&unit==='day'?'kWh':anUnit(m);
+  const cell=(m,v)=>v==null||isNaN(v)?'-':(m==='gen'||m==='usage')&&unit==='day'?chatFmt(v,0):anCell(m,v);
+  const prim=re||ms[0]==='ratio'?'ratio':ms[0];
+  let h='<b>📅 '+sc.label+' '+(single?'':unitKo+'별 ')+(re?'RE100 실적':'실적')+'</b>'+(re?'<br><span class="an-note">RE100 달성률 = 태양광 발전량 ÷ 전력사용량 (자가 태양광 기준, 대시보드의 사용비율과 동일)</span>':'');
+  fl.forEach(f=>{
+    // 행 만들기: {k, gen, usage, solar, ratio, hours, days, yoyKey}
+    let rows=[];
+    if(unit==='month')rows=anMonthsIn(sc).map(m=>{const g=AN_GEN_M[m]||{},u=AN_USE_M[m]||{};return{k:anShortYM(m),ym:m,gen:g['kwh_'+f],usage:u['usage_'+f],solar:u['solar_'+f],ratio:u['ratio_'+f],hours:g['hrs_'+f],days:g.days||0,partial:!anComplete(m)};});
+    else if(unit==='week'){const wu={};RAW.weekly_usage.forEach(w=>{wu[w.week]=w;});rows=RAW.weekly_gen.filter(w=>w.week_start>=sc.from&&w.week_start<=sc.to).map(w=>{const u=wu[w.week]||{};const we=new Date(w.week_start+'T00:00:00');we.setDate(we.getDate()+6);return{k:anMD(w.week_start)+'~',partial:we.toISOString().slice(0,10)>anLastDate(),gen:w['kwh_'+f],usage:u['usage_'+f],solar:u['solar_'+f],ratio:u['ratio_'+f],hours:w['hrs_'+f],days:7};});}
+    else{const du={};RAW.usage.forEach(d=>{du[d.date]=d;});rows=RAW.daily.filter(d=>d.date>=sc.from&&d.date<=sc.to).map(d=>{const u=du[d.date]||{};return{k:anMD(d.date)+'('+anDow(d.date)+')',gen:d['kwh_'+f],usage:u['usage_'+f],solar:u['solar_'+f],ratio:u['ratio_'+f],hours:d['hrs_'+f],days:1};});}
+    if(!rows.length){h+='<br>'+chatFactoryLabel(f)+': 데이터 없음';return;}
+    let cut='';
+    if(rows.length>62){cut='<span class="an-note">행이 많아 최근 62개만 표시</span>';rows=rows.slice(-62);}
+    const showYoy=unit==='month';
+    h+=(fl.length>1||f!=='all'?'<h4>'+chatFactoryLabel(f)+'</h4>':'')+'<table class="an-tbl"><tr><th>'+unitKo+'</th>'+ms.map(m=>'<th>'+mName(m)+'('+mUnit(m)+')</th>').join('')+(showYoy?'<th>'+mName(prim)+' 전년비</th>':'')+'</tr>';
+    rows.forEach(r=>{h+='<tr><td>'+r.k+(r.partial?'*':'')+'</td>'+ms.map(m=>'<td'+(m===prim?' style="font-weight:600"':'')+'>'+cell(m,r[m])+'</td>').join('')+(showYoy?'<td>'+anChgHtml(prim,anChg(prim,r.ym,anAddM(r.ym,-12),f))+'</td>':'')+'</tr>';});
+    // 합계/평균 행: 사용비율은 단순 평균이 아니라 Σ발전 ÷ Σ사용
+    const sum=k=>rows.reduce((s,r)=>s+(r[k]||0),0),dsum=sum('days');
+    const tot={gen:sum('gen'),usage:sum('usage'),ratio:sum('usage')?sum('solar')/sum('usage')*100:null,hours:dsum?rows.reduce((s,r)=>s+(r.hours||0)*r.days,0)/dsum:null};
+    h+='<tr style="border-top:2px solid #475569"><td><b>합계</b></td>'+ms.map(m=>'<td><b>'+cell(m,tot[m])+'</b></td>').join('')+(showYoy?'<td></td>':'')+'</tr></table>'+cut+(rows.some(r=>r.partial)?'<span class="an-note">* 데이터가 다 차지 않은 기간</span>':'');
+    // 인사이트
+    const vals=rows.filter(r=>r[prim]!=null&&!isNaN(r[prim])&&!(r.partial&&prim!=='ratio'&&prim!=='hours'));   // 덜 찬 주·달은 최고/최저 판단에서 제외
+    if(vals.length>=2&&!single){
+      const mx=vals.reduce((a,b)=>b[prim]>a[prim]?b:a),mn=vals.reduce((a,b)=>b[prim]<a[prim]?b:a);
+      const aG=anMean(vals.map(r=>r.gen||0)),aU=anMean(vals.map(r=>r.usage||0));
+      const why=r=>{const c=[];if(prim==='ratio'){if(r.usage<aU*0.9)c.push('사용량 적음');if(r.usage>aU*1.1)c.push('사용량 많음');if(r.gen>aG*1.1)c.push('발전량 많음');if(r.gen<aG*0.9)c.push('발전량 적음');}return c.length?' — '+c.join('·'):'';};
+      const fv=(r)=>cell(prim,r[prim])+mUnit(prim);
+      const ops=['최고 '+mx.k+' '+fv(mx)+why(mx),'최저 '+mn.k+' '+fv(mn)+why(mn)];
+      const first=vals[0][prim],last=vals[vals.length-1][prim];
+      ops.push('기간 처음('+vals[0].k+') 대비 마지막('+vals[vals.length-1].k+') '+anChgHtml(prim,prim==='ratio'?last-first:anPct(last,first)));
+      if(re)ops.push('기간 전체 RE100 달성률 <b>'+chatFmt(tot.ratio,1)+'%</b> (태양광 '+chatFmt(tot.gen/1000,1)+'MWh ÷ 사용량 '+chatFmt(tot.usage/1000,1)+'MWh)');
+      h+='<div class="an-box">'+ops.map(o=>'· '+o).join('<br>')+'</div>';
+    }
+    if(f===fl[0]&&rows.length>=2&&!single){
+      const gD=v=>unit==='day'?v:v/1000,gU=unit==='day'?'kWh':'MWh';
+      const tr=[{x:rows.map(r=>r.k),y:rows.map(r=>r.gen==null?null:gD(r.gen)),type:'bar',name:'발전량('+gU+')',marker:{color:'#2dd4bf'},hovertemplate:'%{x}: %{y:,.1f}'+gU+'<extra></extra>'}];
+      if(ms.includes('ratio'))tr.push({x:rows.map(r=>r.k),y:rows.map(r=>r.ratio),type:'scatter',mode:'lines+markers',name:(re?'RE100':'사용비율')+'(%)',yaxis:'y2',line:{color:'#f59e0b',width:2},marker:{size:5},hovertemplate:'%{x}: %{y:.1f}%<extra></extra>'});
+      h+=anChart(tr,{xaxis:{type:'category'},yaxis:{title:{text:gU,font:{size:9}}},yaxis2:{overlaying:'y',side:'right',showgrid:false,tickfont:{size:9},ticksuffix:'%',rangemode:'tozero'},margin:{t:6,r:36,b:26,l:40}},180);
+    }
+  });
+  return h;
+}
+
 // ⑨ 월간 종합 분석
 function anSummaryReport(text,periods,facs){
   const mp=periods.find(p=>p.mode==='month'),ym=mp?mp.ym:anLastYM(),g=AN_GEN_M[ym];
@@ -958,7 +1040,12 @@ function anSummaryReport(text,periods,facs){
   return h;
 }
 
+// RE100을 물었으면 답변 속 '태양광 사용비율'을 RE100 용어로 바꿔 보여준다
 function chatAnswer(text){
+  const h=chatAnswerCore(text);
+  return /RE\s*100/i.test(text)?h.replace(/태양광 사용비율/g,'RE100 달성률(태양광 사용비율)'):h;
+}
+function chatAnswerCore(text){
   if(!RAW.daily.length)return'데이터가 없습니다.';
   if(/도움말|help|예시/i.test(text))return'이렇게 물어보세요:<br>'+CHAT_EXAMPLES.map(e=>'· '+e).join('<br>');
   if(/^\s*(안녕|반가워|하이|hi|hello)/i.test(text))return'안녕하세요! 발전량 데이터에 대해 물어보세요. "도움말"이라고 입력하면 예시를 볼 수 있어요.';
@@ -979,9 +1066,14 @@ function chatAnswer(text){
     const P=chatFindAllPeriods(text),F=chatDetectFactories(text),M=chatDetectMetrics(text);
     const monthPs=P.filter(p=>p.mode==='month');
     if(/예측|예상|전망|추정|될까|나올까|얼마나\s*나올/.test(text))return anForecast(text,F);
-    if(/목표|3\.5\s*h?|달성/.test(text))return anTargetReport(text,P,F);
+    const isRE=/RE\s*100|재생\s*에너지|자급률|자립률/i.test(text);
+    if(/목표|3\.5\s*h?|달성/.test(text)&&!isRE&&!/사용\s*비율/.test(text))return anTargetReport(text,P,F);
     if(/이슈|이상\s*(징후|여부|유무|감지|점검|있|없|한)|특이|급감|급증|급격|문제|점검|진단|비정상|고장|저하|특별|원인|이유|(감소|증가|하락|상승|떨어|늘).{0,20}(검토|확인|있는지|있어|있나|봐)/.test(text))return anIssueReport(text,P);
     if(/가장|제일|최고|최대|최저|최소|순위|랭킹|top\s*\d*|탑\s*\d|베스트|워스트|상위|하위/i.test(text))return anRankReport(text,P,F,M);
+    // 월별·주별·일별 실적표: "월별"이라고 했거나, 여러 달짜리 기간의 RE100/실적을 물은 경우
+    const multiMonth=P.length===1&&['yearMonthRange','monthRange','year','recentMonths'].includes(P[0].mode);
+    if(!/추세|트렌드|경향/.test(text)&&(/월별|달별|매월|월마다|월\s*단위|각\s*월|주별|주간별|주차별|매주|일별|매일|날짜별|일자별/.test(text)||(multiMonth&&(isRE||/실적|현황|표로|정리/.test(text)))))return anBreakdownReport(text,P,F,M);
+    if(isRE&&P.length<=1)return anBreakdownReport(text,P.length?P:[{mode:'month',ym:anLastYM(),label:chatMonthLabel(anLastYM())}],F,M);
     if(/전년|작년\s*(같은|동월|대비|보다)|전월|지난\s*달\s*(대비|보다)|증감|yoy|mom|대비/i.test(text)&&!/추세|트렌드|추이/.test(text)&&monthPs.length<=1&&P.length<=1)return anChangeReport(text,P,F,M);
     if(/요일|주말|평일/.test(text))return anWeekdayReport(text,P,F);
     if(/추세|트렌드|경향|흐름|추이|패턴|변화/.test(text))return anTrendReport(text,P,F,M);
